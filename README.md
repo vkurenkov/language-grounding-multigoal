@@ -19,7 +19,41 @@ Environments can be of different difficulty, in this case, we list few important
     
 Some of the properties above lead to the POMDP-environment which is hard. Other properties incur sparsity, and it is still a crucial and ongoing challenge for the reinforcement learning field.
 
+Based on the properties above, we start from the "easiest" environments and proceed to the "hardest" ones.
+
+***
+**First level**: Provide as much information as possible but vary sparsity of the reward.
+  1. List of visited items + full view of the map + reward as a distance metric
+  2. List of visited items + full view of the map + reward at every item
+  3. List of visited items + full view of the map + reward at the last item
+  
+***  
+**Second level**: The same as above but with the partial view of the map.
+  1. List of visited items + partial view of the map + reward as a distance metric
+  2. List of visited items + partial view of the map + reward at every item
+  3. List of visited items + partial view of the map + reward at the last item
+  
+***  
+**Third level**: Do not deduce the list of visited items manually and vary the sparsity of the reward.
+  1. Full view of the map + reward as a distance metric
+  2. Full view of the map + reward at every item
+  3. Full view of the map + reward at the last item
+  
+***  
+**Fourth level**: The same as above but with the partial view of the map.
+  1. Partial view of the map + reward as a distance metric
+  2. Partial view of the map + reward at every item
+  3. Partial view of the map + reward at the last item
+ 
+***
+
+Having a list of visited items gives us an opportunity to use several value functions (e.g. Horde) or Universal Value Function Approximator approach. So it is relatively easy to solve such environment when compared to not having a list of visited items. The agent should somehow find ways to infer this list. And reward sparsity takes a crucial role in this case, as we will see later.
+
+Partial view + distance to the current item - is a POMDP in cases where equidistant items are not visible to the agent.
+We artificially create a limitation, such that we do not deduce the list of visited items based on the view of the map. But, one of the interesting outcomes would be to have an agent that can deduce such information automatically.
+
 ## Research Questions
+  
 - How good is the agent in an MDP-environment?
   - Training performance metrics: the total number of timesteps; average reward; an average number of timesteps;
   - Generalization performance metrics: success rate; an average number of timesteps;
