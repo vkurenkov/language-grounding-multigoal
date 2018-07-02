@@ -25,13 +25,13 @@ Based on the properties above, we start from the "easiest" environments and proc
 **First level**: Provide as much information as possible but vary sparsity of the reward.
   1. List of visited items + full view of the map + reward as a distance metric
   2. List of visited items + full view of the map + reward at every item
-  3. List of visited items + full view of the map + reward at the last item
+  3. ~~List of visited items + full view of the map + reward at the last item~~ (Does not make any sense, since we deduce visited items at the training time)
   
 ***  
 **Second level**: The same as above but with the partial view of the map.
   1. List of visited items + partial view of the map + reward as a distance metric
   2. List of visited items + partial view of the map + reward at every item
-  3. List of visited items + partial view of the map + reward at the last item
+  3. ~~List of visited items + partial view of the map + reward at the last item~~ (Does not make any sense, since we deduce visited items at the training time)
   
 ***  
 **Third level**: Do not deduce the list of visited items manually and vary the sparsity of the reward.
