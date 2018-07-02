@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as plt_colors
 
 class Grid:
     def __init__(self, width, height, num_items=3):
@@ -366,6 +368,53 @@ class FindItemsEnv:
         self._update_visited_items()
 
         return output
+
+
+class FindItemsVisualizator:
+    @staticmethod
+    def pyplot(env):
+        fig, a = plt.subplots()
+        
+        # Plot the grid
+        grid = env._grid
+        num_items = grid._num_items
+        width = grid._width
+        height = grid._height
+
+        a.set_xlim((0, width))
+        a.set_ylim((0, height))
+        for x in range(width):
+            for y in range(height):
+                # Draw a grid cell
+                rect = plt.Rectangle((x, y), 1, 1, fill=False)
+                a.add_artist(rect)
+            
+                # Draw an item at the cell
+                items = grid.get_items_at(x, y)
+                if items.any():
+                    item = np.argmax(items)
+
+                    cmap = plt.cm.rainbow
+                    norm = plt_colors.Normalize(0, num_items)
+                    itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color=cmap(norm(item)))
+                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item))
+                    a.add_artist(itm)
+                    a.add_artist(txt)
+
+        # Plot the agent position
+        agent_pos = (env._agent_pos[0] + 0.5, env._agent_pos[1] + 0.5)
+        agent = plt.Circle(agent_pos, radius=0.25, color="r")
+        a.add_artist(agent)
+
+        # Plot the aget's look direction
+        agent_dir = env._agent_look_dir()
+        agent_look = plt.Line2D([agent_pos[0], agent_pos[0] + agent_dir[0]],
+                                [agent_pos[1], agent_pos[1] + agent_dir[1]],
+                                color="b")
+        a.add_artist(agent_look)
+
+        plt.show(fig)
+
 
 if __name__ == "__main__":
     # Grid: Test Grid Marking
