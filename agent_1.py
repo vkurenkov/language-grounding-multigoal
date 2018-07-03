@@ -45,8 +45,8 @@ class Observation:
         return 304
 
     @staticmethod
-    def to_torch(features):
-        return Variable(FloatTensor(features))
+    def to_torch(features, volatile=False):
+        return Variable(FloatTensor(features), volatile=volatile)
 
 
 class Replay:
@@ -69,6 +69,7 @@ NUM_ACTIONS = 6
 EPSILON_START = 0.95
 EPSILON_FINISH = 0.01
 FRAMES = 1000000
+DISCOUNT = 0.95
 
 REPORT_EPISODES = 50
 CHECKPOINT_FRAMES = 50000
@@ -77,7 +78,7 @@ NUM_TRIALS = 20
 seed = -1
 
 for trial in range(NUM_TRIALS):
-    with Session("agent-1-trial-" + str(trial)).start() as sess:
+    with Session("agent-1-1-trial-" + str(trial)).start() as sess:
         sess.switch_group()
         
         # Log
@@ -114,25 +115,32 @@ for trial in range(NUM_TRIALS):
 
             while not done:
                 # Select an action in an epsilon-greedy way
-                action_values = behaviour_q.forward(Observation.to_torch(features))
+                action_values = behaviour_q.forward(Observation.to_torch(features, volatile=True))
                 action = np_rand.random_integers(0, NUM_ACTIONS-1)
                 if np_rand.rand() > epsilon:
                     action = torch.max(action_values, dim=-1)[1].data[0]
 
                 # Take an action and keep current observation
                 obs, reward, done, _ = env.step(action)
-                trajectory.append((features, action, reward))
-                features = Observation.to_features(obs, env)
+                features_after = Observation.to_features(obs, env)
+                trajectory.append((features, action, reward, features_after))
 
                 # Update behaviour network online
                 point = trajectory[-1]
-                estimated_values = behaviour_q.forward(Observation.to_torch(point[0]))
                 point_action = Variable(LongTensor([[int(point[1])]]))
                 point_reward = Variable(FloatTensor([[point[2]]]))
+                point_features_after = Observation.to_torch(point[3], volatile=True)
+
+                estimated_values = behaviour_q.forward(Observation.to_torch(point[0]))
+                estimated_values += torch.max(Variable(behaviour_q.forward(point_features_after).data)) * DISCOUNT
+
                 loss = (point_reward - torch.gather(estimated_values, dim=-1, index=point_action))** 2
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+                # Update current observation
+                features = features_after
 
                 # Update epsilon and number of frames
                 num_frames += 1
@@ -144,10 +152,10 @@ for trial in range(NUM_TRIALS):
             timesteps = sess.get_timesteps()
 
             # Report current progress
-            if len(timesteps) >= REPORT_EPISODES:
+            if len(timesteps) % REPORT_EPISODES == 0:
                 averaged = np.mean(timesteps[-REPORT_EPISODES:])
 
-                sess.log("Current progress: " + str(round((num_frames / FRAMES) * 100, 2))
+                sess.log("Current progress: " + str(round((num_frames / FRAMES) * 100, 2)) + "%")
                 sess.log("\n")
                 sess.log("Current epsilon: " + str(epsilon))
                 sess.log("\n")
