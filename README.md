@@ -1,4 +1,23 @@
-# Reinforcement Learning: Sequential goals with arbitrary order
+# Execution of the complex natural language instructions in virtual environments
+
+# Perspective 1.0
+
+### Problem statement
+  - Given
+    - A corpus of textual instructions, where an instruction has following properties
+        - Possibly contains sub-instructions (*Go to the red and then to the green but to the blue first*)
+        - Possibly contains conditional sub-instructions (*Go to the red if there is a green near by*)
+        - Possibly contains irrelevant information (*Hey, Irene. Please, go to the red!*)
+        - Possibly contains useful relevant information (*Go to the table in the kitchen*)
+    - A signal for successful completion one of the subtasks in the given instruction
+  - Output
+    - A trajectory that resolves the instruction
+    - An explanation of what the agent does at every timestep
+    - Generalization to unseen instructions
+    - Generalization to unseen mutations of the given environment
+
+# Perspective 0.0
+
 The aim of the repository is to find out how reinforcement learning techniques can be applied to find a solution for a given instruction with one important property: the instruction contains sub-goals with specific (and possibly arbitrary) order. We investigate whether the agent is able to generalize to unseen order within the instruction and objects placement. Also, we examine a possibility to feed this kind of instructions directly into the agent, i.e. raw natural language.
 
 Basically, the problem we aim to solve is based on two capstones: solve a sequence of sub-goals in the right order and build the sequence from the natural language instruction. In the end, we would like to build an end-to-end architecture. But for now, it is an open question, whether it is feasible or we should extract sub-goals explicitly.
