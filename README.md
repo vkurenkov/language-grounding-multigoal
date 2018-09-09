@@ -34,7 +34,7 @@ What kind of architecture should we construct in order to execute compound and c
   - Reinforcement Learning
   - Automated Planning
   - Language Grounding
-  - Natural Language Processing (have to make more specific)
+  - Attention Mechanism
 
 # Perspective 0.0
 
