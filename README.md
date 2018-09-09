@@ -2,6 +2,11 @@
 
 # Perspective 1.0
 
+### Research Questions
+
+What kind of architecture should we construct in order to execute compound and conditional natural language instructions in virtual environments using reinforcement learning and attention mechanism?
+
+
 ### Problem statement
   - Given
     - A corpus of textual instructions, where an instruction has following properties
