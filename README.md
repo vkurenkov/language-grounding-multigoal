@@ -24,6 +24,12 @@
   - Sample complexity
   - Average reward
   - Success rate
+  
+### Literature Review
+  - Reinforcement Learning
+  - Automated Planning
+  - Language Grounding
+  - Natural Language Processing (have to make more specific)
 
 # Perspective 0.0
 
