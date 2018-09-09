@@ -15,6 +15,15 @@
     - An explanation of what the agent does at every timestep
     - Generalization to unseen instructions
     - Generalization to unseen mutations of the given environment
+    
+### Goals
+  - Provide a qualitative analysis on execution of compound and conditional intstructions
+  - Make an architecture that is able to describe what the agent is doing in natural language (how to measure?)
+    
+### Metrics
+  - Sample complexity
+  - Average reward
+  - Success rate
 
 # Perspective 0.0
 
