@@ -118,25 +118,32 @@ for trial in range(NUM_TRIALS):
 
             while not done:
                 # Select an action in an epsilon-greedy way
-                action_values = behaviour_q.forward(Observation.to_torch(features))
+                action_values = behaviour_q.forward(Observation.to_torch(features, volatile=True))
                 action = np_rand.random_integers(0, NUM_ACTIONS-1)
                 if np_rand.rand() > epsilon:
                     action = torch.max(action_values, dim=-1)[1].data[0]
 
                 # Take an action and keep current observation
                 obs, reward, done, _ = env.step(action)
-                trajectory.append((features, action, reward))
-                features = Observation.to_features(obs, env)
+                features_after = Observation.to_features(obs, env)
+                trajectory.append((features, action, reward, features_after))
 
-                # Update target network
+                # Update behaviour network online
                 point = trajectory[-1]
-                estimated_values = target_q.forward(Observation.to_torch(point[0]))
                 point_action = Variable(LongTensor([[int(point[1])]]))
                 point_reward = Variable(FloatTensor([[point[2]]]))
+                point_features_after = Observation.to_torch(point[3], volatile=True)
+
+                estimated_values = target_q.forward(Observation.to_torch(point[0]))
+                estimated_values += torch.max(Variable(target_q.forward(point_features_after).data)) * DISCOUNT
+
                 loss = (point_reward - torch.gather(estimated_values, dim=-1, index=point_action))** 2
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+                # Update current observation
+                features = features_after
 
                 # Update epsilon and number of frames
                 num_frames += 1
