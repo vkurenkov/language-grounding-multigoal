@@ -36,10 +36,10 @@ What kind of architecture should we construct in order to execute compound and c
   - Language Grounding
   - Attention Mechanism
   
-### Grid World Instructions Dataset
+### Grid World: Compound instructions
   - Possible commands: "Go to the {obj_name}"
   - Five possible objects: Red, Blue, Green, Yellow, and Black.
-  - Used conjunctions: comma; after that; and then; but first.
+  - Used conjunctions: comma; after that; and then; but first; but before;
   - Maximum instruction length (in terms of subgoals): 5
   
   - Examples:
