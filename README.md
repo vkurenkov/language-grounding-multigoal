@@ -11,9 +11,9 @@ What kind of architecture should we construct in order to execute compound and c
   - Given
     - A corpus of textual instructions, where an instruction has following properties
         - Possibly contains sub-instructions (*Go to the red and then to the green but to the blue first*)
-        - Possibly contains conditional sub-instructions (*Go to the red if there is a green near by*)
-        - Possibly contains irrelevant information (*Hey, Irene. Please, go to the red!*)
-        - Possibly contains useful relevant information (*Go to the table in the kitchen*)
+        - ~~Possibly contains conditional sub-instructions (*Go to the red if there is a green near by*)~~
+        - ~~Possibly contains irrelevant information (*Hey, Irene. Please, go to the red!*)~~
+        - ~~Possibly contains useful relevant information (*Go to the table in the kitchen*)~~
     - A signal for successful completion one of the subtasks in the given instruction
   - Output
     - A trajectory that resolves the instruction
