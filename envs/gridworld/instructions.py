@@ -49,10 +49,13 @@ def generate_compound_instructions(objects, max_instruction_length):
         for permutation in permutations:
             instruction = ""
             instruction_order = []
+            conjunctions = []
             for ind, (state, name) in enumerate(zip(seq, permutation)):
                 instruction += states[state].format(name)
                 instruction_order.insert(states_order[state](ind), objects[name])
-            compounds.append((instruction, instruction_order))
+                conjunctions.append(str.strip(states[state].format("")))
+
+            compounds.append({"raw": instruction, "ordered_objects": instruction_order, "conjunctions": conjunctions})
     
     return compounds
 
