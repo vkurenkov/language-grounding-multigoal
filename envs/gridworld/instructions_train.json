@@ -1,0 +1,922 @@
+[
+    {
+        "raw":"Go to the green, go to the blue",
+        "ordered_objects":[
+            2,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and then go to the red",
+        "ordered_objects":[
+            4,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but before go to the black",
+        "ordered_objects":[
+            4,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and after that go to the green",
+        "ordered_objects":[
+            0,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but before go to the red",
+        "ordered_objects":[
+            0,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and after that go to the yellow",
+        "ordered_objects":[
+            4,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green and then go to the blue",
+        "ordered_objects":[
+            2,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black but first go to the blue",
+        "ordered_objects":[
+            1,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black but before go to the red",
+        "ordered_objects":[
+            0,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and after that go to the blue",
+        "ordered_objects":[
+            4,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and then go to the yellow",
+        "ordered_objects":[
+            4,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green and after that go to the blue",
+        "ordered_objects":[
+            2,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and then go to the blue",
+        "ordered_objects":[
+            4,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue and after that go to the red",
+        "ordered_objects":[
+            1,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but first go to the blue",
+        "ordered_objects":[
+            1,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black but before go to the blue",
+        "ordered_objects":[
+            1,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue and then go to the red",
+        "ordered_objects":[
+            1,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red, go to the blue",
+        "ordered_objects":[
+            0,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red, go to the green",
+        "ordered_objects":[
+            0,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red, go to the black",
+        "ordered_objects":[
+            0,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and after that go to the black",
+        "ordered_objects":[
+            0,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black, go to the red",
+        "ordered_objects":[
+            4,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but before go to the yellow",
+        "ordered_objects":[
+            3,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but first go to the red",
+        "ordered_objects":[
+            0,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but first go to the yellow",
+        "ordered_objects":[
+            3,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red but before go to the green",
+        "ordered_objects":[
+            2,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green and after that go to the yellow",
+        "ordered_objects":[
+            2,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue and then go to the yellow",
+        "ordered_objects":[
+            1,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but before go to the blue",
+        "ordered_objects":[
+            1,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue, go to the yellow",
+        "ordered_objects":[
+            1,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but first go to the blue",
+        "ordered_objects":[
+            1,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but before go to the green",
+        "ordered_objects":[
+            2,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green, go to the yellow",
+        "ordered_objects":[
+            2,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue, go to the black",
+        "ordered_objects":[
+            1,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and after that go to the green",
+        "ordered_objects":[
+            3,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow, go to the red",
+        "ordered_objects":[
+            3,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and then go to the black",
+        "ordered_objects":[
+            3,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and after that go to the red",
+        "ordered_objects":[
+            3,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and then go to the black",
+        "ordered_objects":[
+            0,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but before go to the red",
+        "ordered_objects":[
+            0,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but before go to the yellow",
+        "ordered_objects":[
+            3,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but before go to the red",
+        "ordered_objects":[
+            0,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and after that go to the red",
+        "ordered_objects":[
+            4,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but before go to the blue",
+        "ordered_objects":[
+            1,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green and after that go to the black",
+        "ordered_objects":[
+            2,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but first go to the red",
+        "ordered_objects":[
+            0,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black but first go to the yellow",
+        "ordered_objects":[
+            3,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green, go to the black",
+        "ordered_objects":[
+            2,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue, go to the red",
+        "ordered_objects":[
+            1,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and then go to the green",
+        "ordered_objects":[
+            0,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red but before go to the yellow",
+        "ordered_objects":[
+            3,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but before go to the black",
+        "ordered_objects":[
+            4,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red but first go to the green",
+        "ordered_objects":[
+            2,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue and after that go to the black",
+        "ordered_objects":[
+            1,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green and then go to the black",
+        "ordered_objects":[
+            2,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green and after that go to the red",
+        "ordered_objects":[
+            2,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black, go to the yellow",
+        "ordered_objects":[
+            4,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and then go to the blue",
+        "ordered_objects":[
+            0,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow, go to the black",
+        "ordered_objects":[
+            3,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red but before go to the black",
+        "ordered_objects":[
+            4,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but before go to the black",
+        "ordered_objects":[
+            4,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue and after that go to the green",
+        "ordered_objects":[
+            1,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but first go to the black",
+        "ordered_objects":[
+            4,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black but before go to the yellow",
+        "ordered_objects":[
+            3,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green but first go to the yellow",
+        "ordered_objects":[
+            3,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and after that go to the blue",
+        "ordered_objects":[
+            3,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the green",
+        "ordered_objects":[
+            2
+        ],
+        "conjunctions":[
+            "Go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red, go to the yellow",
+        "ordered_objects":[
+            0,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but first go to the red",
+        "ordered_objects":[
+            0,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red but first go to the blue",
+        "ordered_objects":[
+            1,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow",
+        "ordered_objects":[
+            3
+        ],
+        "conjunctions":[
+            "Go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black, go to the green",
+        "ordered_objects":[
+            4,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and then go to the blue",
+        "ordered_objects":[
+            3,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and after that go to the yellow",
+        "ordered_objects":[
+            0,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red and then go to the yellow",
+        "ordered_objects":[
+            0,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow but before go to the green",
+        "ordered_objects":[
+            2,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but before go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow, go to the green",
+        "ordered_objects":[
+            3,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            ", go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and then go to the green",
+        "ordered_objects":[
+            3,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black but first go to the red",
+        "ordered_objects":[
+            0,
+            4
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the black and after that go to the green",
+        "ordered_objects":[
+            4,
+            2
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the red but first go to the black",
+        "ordered_objects":[
+            4,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue and after that go to the yellow",
+        "ordered_objects":[
+            1,
+            3
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and after that go to the"
+        ]
+    },
+    {
+        "raw":"Go to the yellow and then go to the red",
+        "ordered_objects":[
+            3,
+            0
+        ],
+        "conjunctions":[
+            "Go to the",
+            "and then go to the"
+        ]
+    },
+    {
+        "raw":"Go to the blue but first go to the green",
+        "ordered_objects":[
+            2,
+            1
+        ],
+        "conjunctions":[
+            "Go to the",
+            "but first go to the"
+        ]
+    }
+]
