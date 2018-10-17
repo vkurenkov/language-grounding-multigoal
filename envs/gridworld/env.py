@@ -1,3 +1,5 @@
+import gym
+import gym.spaces
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as plt_colors
@@ -46,7 +48,7 @@ class Grid:
         return self._grid[:, x, y]
 
 
-class FindItemsEnv:
+class FindItemsEnv(gym.Env):
     '''
     The agent is instructed to find given items on the grid.
     The agent must visit all of the specified items in the proper order.
@@ -89,17 +91,38 @@ class FindItemsEnv:
     REWARD_TYPE_LAST_ITEM = 2
     
     def __init__(self, width, height, num_items, reward_type,
-                       must_avoid_non_targets=False):
+                 instruction=[0], must_avoid_non_targets=False):
         '''
         num_items - number of unique items on the grid
                     no more than this number of items will be placed on the grid
         reward_type - what kind of reward shaping is applied
         must_avoid_non_targets - whether the agent must avoid non current target objects
+        instruction - an array of items that must be visited in the specified order
+                e.g [0, 2, 1] - first the agent must visit 0, then 2, then 1
         '''
         self._num_items = num_items
         self._grid = Grid(width, height, num_items)
         self._reward_type = reward_type
         self._must_avoid_non_targets = must_avoid_non_targets
+
+        self.action_space = gym.spaces.Discrete(6)
+        self.observation_space = gym.spaces.Dict({
+            "agent_position": gym.spaces.Tuple((gym.spaces.Discrete(width), gym.spaces.Discrete(height))),
+            "agent_look": gym.spaces.Discrete(4),
+            "grid": gym.spaces.Box(0.0, 1.0, shape=self._grid.get_grid().shape, dtype=np.float32)
+        })
+
+        self.instruction = instruction
+        self.reset()
+
+    def _reset_instruction(self, instruction):
+        self.instruction = instruction
+        self._items_visit_order = instruction
+        self._items_visit_order_pos = []
+
+        # Fill in positions of items to visit
+        for item in self._items_visit_order:
+            self._items_visit_order_pos.append(self._items_pos[item])
 
     def _get_distance(self, pos0, pos1):
         return abs(pos0[0] - pos1[0]) + abs(pos0[1] - pos1[1])
@@ -264,22 +287,21 @@ class FindItemsEnv:
     def _has_done(self):
         target_item = self._cur_target_item()
         observed_item = self._agent_sees()
-
-        # We have done in following cases:
-            # There are no items left
-            # Observed item is not the current target item
-            # Observed item is the current target item and it was the last item
-
+        # All items were seen
         if target_item == FindItemsEnv.NO_OBJECT:
             return True
-
-        if observed_item == FindItemsEnv.NO_OBJECT:
-            return False
-        if self._must_avoid_non_targets and observed_item != target_item:
-            return True
-        if observed_item == target_item:
-            if len(self._items_visit_order) == len(self._visited_items) + 1:
-                return True
+        else:
+            if observed_item == FindItemsEnv.NO_OBJECT:
+                return False
+            else:
+                if observed_item != target_item:
+                    if self._must_avoid_non_targets:
+                        return True
+                    else:
+                        return False
+                else:
+                    if len(self._items_visit_order) == len(self._visited_items) + 1:
+                        return True
 
     def _gym_output(self):
         '''
@@ -291,11 +313,15 @@ class FindItemsEnv:
         '''
         return self._current_observation(), self._current_reward(), self._has_done(), None
 
-    def reset(self, instruction):
+    def handle_message(self, msg):
+        """
+        Handles custom messages (useful for asynchronous environments).
+        This one assumes that all messages are instructions to be set.
+        """
+        self._reset_instruction(msg)
+
+    def reset(self):
         '''
-        input:
-            instruction - an array of items that must be visited in the specified order
-                          e.g [0, 2, 1] - first the agent must visit 0, then 2, then 1
         output:
             observation - an observation after the action, tuple (agent_pos, agent_dir, grid)
             reward - a scalar reward after the action was done
@@ -304,13 +330,8 @@ class FindItemsEnv:
         '''
         self._grid.clear()
         self._randomly_place_items_and_agent()
-        self._items_visit_order = instruction
-        self._items_visit_order_pos = []
+        self._reset_instruction(self.instruction)
         self._visited_items = []
-
-        # Fill in positions of items to visi
-        for item in self._items_visit_order:
-            self._items_visit_order_pos.append(self._items_pos[item])
 
         # First obtain current observation
         output = self._gym_output()
@@ -332,6 +353,9 @@ class FindItemsEnv:
             reward - a scalar reward after the action was done
             done - whether the mission is terminated (successful or not)
         '''
+        if self._has_done():
+            return self._gym_output()
+            
         # Act
         if action == FindItemsEnv.ACTION_TURN_LEFT:
             self._turn_agent(left=True)
