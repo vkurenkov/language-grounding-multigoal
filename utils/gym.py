@@ -3,23 +3,23 @@ from collections import deque
 import cv2
 import gym
 import numpy as np
+
 from gym import spaces
 from multiprocessing import Process, Pipe
+from copy import deepcopy
 
 
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
-    env = env_fn_wrapper.x()
+    env = deepcopy(env_fn_wrapper.x)
     while True:
         cmd, data = remote.recv()
         if cmd == 'step':
             ob, reward, done, info = env.step(data)
-            if done:
-                ob = env.reset()
             remote.send((ob, reward, done, info))
         elif cmd == 'reset':
-            ob = env.reset()
-            remote.send(ob)
+            ob, reward, done, info = env.reset()
+            remote.send((ob, reward, done, info))
         elif cmd == 'reset_task':
             ob = env.reset_task()
             remote.send(ob)
@@ -28,6 +28,11 @@ def worker(remote, parent_remote, env_fn_wrapper):
             break
         elif cmd == 'get_spaces':
             remote.send((env.observation_space, env.action_space))
+        elif cmd == "custom_msg":
+            if hasattr(env, "handle_message"):
+                env.handle_message(data)
+            else:
+                raise NotImplementedError("Original environment does not handle custom messages.")
         else:
             raise NotImplementedError
 
@@ -84,6 +89,12 @@ class VecEnv(object):
         self.step_async(actions)
         return self.step_wait()
 
+    def send_msg(self, msg):
+        """
+        Sends a message to all environments
+        """
+        pass
+
 
 class CloudpickleWrapper(object):
     """
@@ -138,7 +149,16 @@ class SubprocVecEnv(VecEnv):
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
-        return np.stack([remote.recv() for remote in self.remotes])
+
+        results = [remote.recv() for remote in self.remotes]
+        self.waiting = False
+        obs, rews, dones, infos = zip(*results)
+        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+
+    def reset_at(self, at):
+        self.remotes[at].send(("reset", None))
+        obs, rew, done, info = self.remotes[at].recv()
+        return obs, rew, done, info
 
     def reset_task(self):
         for remote in self.remotes:
@@ -157,8 +177,79 @@ class SubprocVecEnv(VecEnv):
             p.join()
             self.closed = True
 
+    def send_msg(self, msg, at=None):
+        if self.closed:
+            return
+        if at == None:
+            for remote in self.remotes:
+                remote.send(("custom_msg", msg))
+        else:
+            self.remotes[at].send(("custom_msg", msg))
+
     def __len__(self):
         return self.nenvs
+
+
+class ObservationStack(gym.Wrapper):
+    def __init__(self, env, stack_size):
+        gym.Wrapper.__init__(self, env)
+
+        self.env = env
+        self.stack_size = stack_size
+        self.observations = deque([], maxlen=stack_size)
+        self.observation_space = spaces.Dict({
+            i:env.observation_space for i in range(stack_size)
+        })
+
+    def reset(self):
+        ob, reward, done, info = self.env.reset()
+        for _ in range(self.stack_size):
+            self.observations.append(ob)
+        return self._get_ob(), reward, done, info
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
+        self.observations.append(ob)
+        return self._get_ob(), reward, done, info
+
+    def handle_message(self, msg):
+        if hasattr(self.env, "handle_message"):
+            self.env.handle_message(msg)
+        else:
+            raise NotImplementedError("Wrapped environment does not handle custom messages.")
+
+    def _get_ob(self):
+        assert len(self.observations) == self.stack_size
+
+        return {i:self.observations[i] for i in range(len(self.observations))}
+
+
+class LimitedSteps(gym.Wrapper):
+    def __init__(self, env, max_steps=100):
+        gym.Wrapper.__init__(self, env)
+
+        self.env = env
+        self.max_steps = max_steps
+        self._num_steps = 0
+        self.observation_space = env.observation_space
+
+    def reset(self):
+        self._num_steps = 0
+        return self.env.reset()
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
+        if self._num_steps >= self.max_steps:
+            done = True
+
+        self._num_steps += 1
+        return ob, reward, done, info
+
+    def handle_message(self, msg):
+        if hasattr(self.env, "handle_message"):
+            self.env.handle_message(msg)
+        else:
+            raise NotImplementedError("Wrapped environment does not handle custom messages.")
 
 
 class FrameStack(gym.Wrapper):
@@ -198,3 +289,21 @@ class LazyFrames(object):
         out = np.concatenate(self._frames, axis=0)
         out = out.astype(dtype)
         return out
+
+
+class ProcessFrame84(gym.ObservationWrapper):
+    def __init__(self, env=None):
+        super(ProcessFrame84, self).__init__(env)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(84, 84, 1))
+
+    def observation(self, obs):
+        return ProcessFrame84.process(obs)
+
+    @staticmethod
+    def process(img):
+        img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
+        img = img / 255.
+        resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
+        x_t = resized_screen[18:102, :]
+        x_t = np.reshape(x_t, [1, 84, 84])
+        return x_t.astype(np.float32)
