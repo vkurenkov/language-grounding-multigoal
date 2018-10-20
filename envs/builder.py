@@ -6,7 +6,7 @@ REWARD_SCALERS = ["none", "min_max"]
 ENVIRONMENTS = ["grid_world"]
 
 
-def build_async_environment(environment="grid_world", reward_scaler={name: "none"},
+def build_async_environment(environment="grid_world", reward_scaler={"name": "none"},
                             stack_size=4, num_async_envs=10, **kwargs):
     '''
     params:

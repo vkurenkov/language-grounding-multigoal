@@ -265,16 +265,12 @@ class RewardMinMaxScaler(gym.Wrapper):
         return np.clip((reward - self.min_reward) / (self.max_reward - self.min_reward), 0.0, 1.0)
 
     def reset(self):
-        self._num_steps = 0
         return self.env.reset()
 
     def step(self, action):
         ob, reward, done, info = self.env.step(action)
-        if self._num_steps >= self.max_steps:
-            done = True
-
-        self._num_steps += 1
-        return ob, reward, done, 
+        reward = self._scale(reward)
+        return ob, reward, done, info
 
     def handle_message(self, msg):
         if hasattr(self.env, "handle_message"):
