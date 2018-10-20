@@ -252,6 +252,37 @@ class LimitedSteps(gym.Wrapper):
             raise NotImplementedError("Wrapped environment does not handle custom messages.")
 
 
+class RewardMinMaxScaler(gym.Wrapper):
+    def __init__(self, env, min_reward, max_reward):
+        gym.Wrapper.__init__(self, env)
+
+        self.env = env
+        self.min_reward = min_reward
+        self.max_reward = max_reward
+        self.observation_space = env.observation_space
+
+    def _scale(self, reward):
+        return np.clip((reward - self.min_reward) / (self.max_reward - self.min_reward), 0.0, 1.0)
+
+    def reset(self):
+        self._num_steps = 0
+        return self.env.reset()
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
+        if self._num_steps >= self.max_steps:
+            done = True
+
+        self._num_steps += 1
+        return ob, reward, done, 
+
+    def handle_message(self, msg):
+        if hasattr(self.env, "handle_message"):
+            self.env.handle_message(msg)
+        else:
+            raise NotImplementedError("Wrapped environment does not handle custom messages.")
+
+
 class FrameStack(gym.Wrapper):
     def __init__(self, env, k):
         gym.Wrapper.__init__(self, env)
