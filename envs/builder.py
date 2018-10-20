@@ -6,7 +6,7 @@ REWARD_SCALERS = ["none", "min_max"]
 ENVIRONMENTS = ["grid_world"]
 
 
-def build_async_environment(environment="grid_world", reward_scaler="min_max",
+def build_async_environment(environment="grid_world", reward_scaler={name: "none"},
                             stack_size=4, num_async_envs=10, **kwargs):
     '''
     params:
@@ -16,12 +16,14 @@ def build_async_environment(environment="grid_world", reward_scaler="min_max",
     '''
     if environment not in ENVIRONMENTS:
         raise NotImplementedError("This environment is not implemented.")
-    if reward_scaler not in REWARD_SCALERS:
+    if reward_scaler["name"] not in REWARD_SCALERS:
         raise NotImplementedError("This reward scaling strategy is not implemented.")
 
-    if reward_scaler == "min_max":   
+    if reward_scaler["name"] == "min_max":
+        min_reward = reward_scaler["min_reward"]
+        max_reward = reward_scaler["max_reward"]
         return SubprocVecEnv([
-            ObservationStack(RewardMinMaxScaler(LimitedSteps(FindItemsEnv(**kwargs)), **kwargs), stack_size)
+            ObservationStack(RewardMinMaxScaler(LimitedSteps(FindItemsEnv(**kwargs)), min_reward, max_reward), stack_size)
             for _ in range(num_async_envs)
         ])
     else:
