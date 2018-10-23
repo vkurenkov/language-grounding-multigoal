@@ -48,42 +48,75 @@ class Observation:
         return Variable(FloatTensor(features), volatile=volatile)
 
 
-class Replay:
-    def __init__(self, size=100000, unusual_sampling=False):
-        self._replay = []
-        self._size = size
-        self._unusual_sampling = unusual_sampling
+class ReplayBuffer(object):
+    def __init__(self, size):
+        """Create Replay buffer.
+        Parameters
+        ----------
+        size: int
+            Max number of transitions to store in the buffer. When the buffer
+            overflows the old memories are dropped.
+        """
+        self._storage = []
+        self._maxsize = size
+        self._next_idx = 0
 
-    def append(self, memento):
-        self._replay.append(memento)
-        if len(self._replay) >= self._size:
-            self._replay = self._replay[-self._size:]
+    def __len__(self):
+        return len(self._storage)
 
-    def sample(self, n):
-        if len(self._replay) == 0:
-            return []
+    def add(self, obs_t, action, reward, obs_tp1, done):
+        data = (obs_t, action, reward, obs_tp1, done)
 
-        if not self._unusual_sampling:
-            if n > len(self._replay):
-                return [self._replay[i] for i in np.random.choice(len(self._replay), size=len(self._replay), replace=False)]
-            else:
-                return [self._replay[i] for i in np.random.choice(len(self._replay), size=n, replace=False)]
+        if self._next_idx >= len(self._storage):
+            self._storage.append(data)
         else:
-            probs = np.array([abs(memento[2]) for memento in self._replay])
-            probs = probs / np.sum(probs)
-            if n > len(self._replay):
-                return [self._replay[i] for i in np.random.choice(len(self._replay), size=len(self._replay), replace=False, p=probs)]
-            else:
-                return [self._replay[i] for i in np.random.choice(len(self._replay), size=n, replace=False, p=probs)]
+            self._storage[self._next_idx] = data
+        self._next_idx = (self._next_idx + 1) % self._maxsize
+
+    def _encode_sample(self, idxes):
+        obses_t, actions, rewards, obses_tp1, dones = [], [], [], [], []
+        for i in idxes:
+            data = self._storage[i]
+            obs_t, action, reward, obs_tp1, done = data
+            obses_t.append(np.array(obs_t, copy=False))
+            actions.append(np.array(action, copy=False))
+            rewards.append(reward)
+            obses_tp1.append(np.array(obs_tp1, copy=False))
+            dones.append(done)
+        return np.array(obses_t), np.array(actions), np.array(rewards), np.array(obses_tp1), np.array(dones)
+
+    def sample(self, batch_size):
+        """Sample a batch of experiences.
+        Parameters
+        ----------
+        batch_size: int
+            How many transitions to sample.
+        Returns
+        -------
+        obs_batch: np.array
+            batch of observations
+        act_batch: np.array
+            batch of actions executed given obs_batch
+        rew_batch: np.array
+            rewards received as results of executing act_batch
+        next_obs_batch: np.array
+            next set of observations seen after executing act_batch
+        done_mask: np.array
+            done_mask[i] = 1 if executing act_batch[i] resulted in
+            the end of an episode and 0 otherwise.
+        """
+        idxes = [rand.randint(0, len(self._storage) - 1) for _ in range(batch_size)]
+        return self._encode_sample(idxes)
 
 
 class DQNEpsilonGreedyAgent(Agent):
     def __init__(self, target_switch_frames=50000, max_frames=400000,
-                 eps_start=0.98, learning_rate=0.01, gamma=0.99, seed=0):
+                 buffer_size=100000, eps_start=0.98, learning_rate=0.01, gamma=0.99, seed=0):
         super(Agent, self).__init__()
 
         self.target_switch_frames = target_switch_frames
         self.eps_start = eps_start
+        self.buffer_size = buffer_size
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.max_frames = max_frames
@@ -102,49 +135,33 @@ class DQNEpsilonGreedyAgent(Agent):
         # Q-Value approximator and optimizator
         self._behavior_q = QValue(Observation.num_features(), self._env.action_space.n)
         self._optimizer = t.optim.Adam(self._behavior_q.parameters(), lr=self.learning_rate)
-        self._replay = Replay(unusual_sampling=False)
+        self._replay = ReplayBuffer(size=self.buffer_size)
 
         self._env_obs, self._env_rew, self._env_done, _ = self._env.reset()
-        self._trajectory = []
 
     def train_step(self):
         if self.train_is_done():
             return
 
         if self._env_done:
-            # Monte-carlc return
-            value = 0.0
-            for i, point in enumerate(reversed(self._trajectory)):
-                value = point[2]
-                self._replay.append((point[0], point[1], value))
-
             # Train the network
             for i in range(1):
-                point_features = None
-                point_actions = None
-                point_returns = None
-                samples = self._replay.sample(128)
-                for sample in samples:
-                    if point_features is None:
-                        point_features = Observation.to_torch(sample[0])
-                        point_actions = Variable(LongTensor([[int(sample[1])]]))
-                        point_returns = Variable(FloatTensor([[sample[2]]]))
-                    else:
-                        point_features = t.cat((point_features, Observation.to_torch(sample[0])), 0)
-                        point_actions = t.cat((point_actions, Variable(LongTensor([[int(sample[1])]]))), 0)
-                        point_returns = t.cat((point_returns, Variable(FloatTensor([[sample[2]]]))), 0)
+                obs_batch, act_batch, rew_batch, _, _ = self._replay.sample(128)
+                obs_batch = Observation.to_torch(obs_batch)
+                act_batch = Variable(LongTensor(act_batch))
+                rew_batch = Variable(FloatTensor(rew_batch))
 
-                if len(samples) > 0:
-                    estimated_values = self._behavior_q.forward(point_features)
-                    loss = t.mean((point_returns - t.gather(estimated_values, dim=-1, index=point_actions)) ** 2)
+                estimated_values = self._behavior_q.forward(obs_batch)
+                estimated_values = estimated_values.view(estimated_values.size(0), -1)
+                act_batch = act_batch.view(act_batch.size(0), 1)
+                loss = t.mean((rew_batch - t.gather(estimated_values, dim=-1, index=act_batch)) ** 2)
 
-                    self._optimizer.zero_grad()
-                    loss.backward()
-                    self._optimizer.step()
+                self._optimizer.zero_grad()
+                loss.backward()
+                self._optimizer.step()
 
             # Reset the episode
             self._env_obs, self._env_rew, self._env_done, _ = self._env.reset()
-            self._trajectory = []
 
         self._features = Observation.to_features(self._env_obs, self._env)
 
@@ -157,7 +174,7 @@ class DQNEpsilonGreedyAgent(Agent):
         # Take an action and keep current observation
         self._env_obs, self._env_rew, self._env_done, _ = self._env.step(action)
         self._features_after = Observation.to_features(self._env_obs, self._env)
-        self._trajectory.append((self._features, action, self._env_rew, self._features_after))
+        self._replay.add(self._features, action, self._env_rew, self._features_after, self._env_done)
 
         # Update current observation
         self._features = self._features_after
@@ -192,6 +209,6 @@ class DQNEpsilonGreedyAgent(Agent):
         }
 
     def name(self):
-        return "ddqn-eps_{}-lr_{}-gamma_{}-target_switch_{}-max_frames_{}-seed_{}" \
-            .format(self.eps_start, self.learning_rate, self.gamma, self.target_switch_frames,
-                    self.max_frames, self.seed)
+        return "ddqn-eps_{}-lr_{}-gamma_{}-buffer_size_{}-target_switch_{}-max_frames_{}-seed_{}" \
+            .format(self.eps_start, self.learning_rate, self.gamma, self.buffer_size,
+                    self.target_switch_frames, self.max_frames, self.seed)
