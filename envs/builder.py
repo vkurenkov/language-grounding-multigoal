@@ -23,11 +23,11 @@ def build_async_environment(environment="grid_world", reward_scaler={"name": "no
         min_reward = reward_scaler["min_reward"]
         max_reward = reward_scaler["max_reward"]
         return SubprocVecEnv([
-            ObservationStack(RewardMinMaxScaler(LimitedSteps(FindItemsEnv(**kwargs)), min_reward, max_reward), stack_size)
+            ObservationStack(RewardMinMaxScaler(LimitedSteps(FindItemsEnv(**kwargs), 40), min_reward, max_reward), stack_size)
             for _ in range(num_async_envs)
         ])
     else:
         return SubprocVecEnv([
-            ObservationStack(LimitedSteps(FindItemsEnv(**kwargs)), stack_size)
+            ObservationStack(LimitedSteps(FindItemsEnv(**kwargs), 40), stack_size)
             for _ in range(num_async_envs)
         ])

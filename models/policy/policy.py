@@ -21,7 +21,7 @@ class GridPolicy(nn.Module):
         self._language = language
         self._state = state
 
-        self._input_size = self._state.out_size + self._state._goal_space_size
+        self._input_size = self._state.out_size + self._vision.out_size
         self._num_actions = num_actions
 
         self.action_probs = nn.Sequential(
@@ -51,21 +51,24 @@ class GridPolicy(nn.Module):
         # Smart-initialization
         xavier_initialization(self)
 
-    def forward(self, cur_views, cur_instructions, prev_state):
+    def forward(self, cur_views, cur_instructions, prev_state, external_state=None):
         '''
         params:
             cur_views - current visual perception of the agent [batch_size, depth, width, height]
             cur_instructions - current instruction for the agent [batch_size, max_instruction_len]
             prev_state - previous state of the agent [batch_size, *]
+            external_state - any external information provided from top [batch_size, *]
         return:
             action_distribution (actor) - a distribution over the set of actions
             state_value (critic) - an estimated value for current state
             cur_state - current state [batch_size, state_embedding_size]
         '''
-        cur_state, cur_goal = self._state.forward(prev_state, self._vision.forward(cur_views), self._language.forward(cur_instructions))
+        #cur_state, cur_goal = self._state.forward(prev_state, self._vision.forward(cur_views), self._language.forward(cur_instructions))
+        vision_encoded = self._vision.forward(cur_views)
+        cur_state = self._state.forward(prev_state, vision_encoded, cur_instructions, external_state)
 
-        action_distribution = Categorical(self.action_probs(t.cat([cur_state, cur_goal], dim=-1)))
-        state_value = self.state_value(t.cat([cur_state, cur_goal], dim=-1))
+        action_distribution = Categorical(self.action_probs(t.cat([cur_state, vision_encoded], dim=-1)))
+        state_value = self.state_value(t.cat([cur_state, vision_encoded], dim=-1))
 
         return action_distribution, state_value, cur_state
 

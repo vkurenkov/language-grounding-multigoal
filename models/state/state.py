@@ -10,7 +10,7 @@ class State(nn.Module):
     def __init_(self):
         super(State, self).__init__()
 
-    def forward(self, cur_state, cur_vision, cur_language):
+    def forward(self, cur_state, cur_vision, cur_language, external_state=None):
         '''
         params:
             cur_state - current state of the agent [batch_size, *]
@@ -42,7 +42,7 @@ class GridState(State):
         # State encoder
         self.rnn = nn.GRUCell(self._vision_out_size, self.out_size)
 
-    def forward(self, prev_state, cur_vision, cur_language):
+    def forward(self, prev_state, cur_vision, cur_language, external_state=None):
         '''
         params:
             prev_state - previous state of the agent [batch_size, 128]
@@ -98,6 +98,33 @@ class GridState(State):
             lang_goal_space[:, i, :] = self.lang_goal_lin2(F.selu(self.lang_goal_lin1(language[:, i, :])))
 
         return lang_goal_space
+
+    def get_initial_state(self, batch_size):
+        initial_state = Variable(t.ones(batch_size, self.out_size))
+        if is_cuda(self):
+            initial_state.cuda()
+        return initial_state
+
+
+class ExternalState(State):
+    def __init__(self,  num_external_features=3, num_out_features=3, n_stack=1):
+        super(ExternalState, self).__init__()
+
+        self.out_size = num_out_features
+        self._embedder = nn.Sequential(
+            nn.Linear(num_external_features * n_stack, num_out_features),
+            nn.SELU(),
+            nn.Linear(num_out_features, num_out_features),
+            nn.SELU()
+        )
+
+    def forward(self, prev_state, cur_vision, cur_language, external_state):
+        '''
+        params:
+            external_state - any external state of size [batch_size, n_stack, num_external_features]
+        '''
+        batch_size = external_state.size(0)
+        return self._embedder(external_state.view(batch_size, -1))
 
     def get_initial_state(self, batch_size):
         initial_state = Variable(t.ones(batch_size, self.out_size))

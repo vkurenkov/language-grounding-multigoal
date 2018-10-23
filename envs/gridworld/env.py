@@ -214,16 +214,7 @@ class FindItemsEnv(gym.Env):
                 raise Exception("No such look direction")
 
     def _agent_look_dir(self):
-        if self._agent_look == FindItemsEnv.LOOK_EAST:
-            return (1, 0)
-        elif self._agent_look == FindItemsEnv.LOOK_WEST:
-            return (-1, 0)
-        elif self._agent_look == FindItemsEnv.LOOK_NORTH:
-            return (0, 1)
-        elif self._agent_look == FindItemsEnv.LOOK_SOUTH:
-            return (0, -1)
-
-        raise Exception("No such look direction")
+        return FindItemsEnv.look_to_dir(self._agent_look)
     
     def _agent_sees(self):
         '''
@@ -313,6 +304,19 @@ class FindItemsEnv(gym.Env):
         '''
         return self._current_observation(), self._current_reward(), self._has_done(), None
 
+    @staticmethod
+    def look_to_dir(look):
+        if look == FindItemsEnv.LOOK_EAST:
+            return (1, 0)
+        elif look == FindItemsEnv.LOOK_WEST:
+            return (-1, 0)
+        elif look == FindItemsEnv.LOOK_NORTH:
+            return (0, 1)
+        elif look == FindItemsEnv.LOOK_SOUTH:
+            return (0, -1)
+
+        raise Exception("No such look direction") 
+
     def handle_message(self, msg):
         """
         Handles custom messages (useful for asynchronous environments).
@@ -328,6 +332,7 @@ class FindItemsEnv(gym.Env):
             done - whether the mission is terminated (successful or not)
             info - defaults to None
         '''
+        self.seed(0)
         self._grid.clear()
         self._randomly_place_items_and_agent()
         self._reset_instruction(self.instruction)

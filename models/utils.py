@@ -1,4 +1,5 @@
 import numpy as np
+import torch as t
 from torch.nn.init import xavier_normal
 
 
@@ -27,3 +28,7 @@ def freeze_module(module):
 def num_learnable_parameters(module):
     module_parameters = filter(lambda p: p.requires_grad, module.parameters())
     return sum([np.prod(p.size()) for p in module_parameters])
+
+
+def calc_entropy(distribution):
+	return -t.sum(distribution.probs * t.log(distribution.probs), dim=-1)
