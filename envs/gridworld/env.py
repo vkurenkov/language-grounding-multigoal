@@ -332,7 +332,6 @@ class FindItemsEnv(gym.Env):
             done - whether the mission is terminated (successful or not)
             info - defaults to None
         '''
-        self.seed(0)
         self._grid.clear()
         self._randomly_place_items_and_agent()
         self._reset_instruction(self.instruction)

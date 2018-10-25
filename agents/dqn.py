@@ -14,7 +14,8 @@ class QValue(nn.Module):
         super(QValue, self).__init__()
 
         self.linear = nn.Linear(n_features, n_features // 2)
-        self.linear1 = nn.Linear(n_features // 2, n_actions)
+        self.linear1 = nn.Linear(n_features // 2, n_features // 4)
+        self.linear2 = nn.Linear(n_features // 4, n_actions)
         
     def forward(self, features):
         '''
@@ -23,7 +24,7 @@ class QValue(nn.Module):
         output:
             action_values - estimated action values of size (batch_size, n_actions)
         '''
-        return self.linear1(F.relu(self.linear(features)))
+        return self.linear2(F.relu(self.linear1(F.relu(self.linear(features)))))
 
 
 class Observation:
@@ -110,14 +111,15 @@ class ReplayBuffer(object):
 
 
 class DQNEpsilonGreedyAgent(Agent):
-    def __init__(self, target_switch_frames=50000, max_frames=400000,
-                 buffer_size=100000, eps_start=0.98, learning_rate=0.01, gamma=0.99, seed=0):
+    def __init__(self, batch_size=256, max_frames=1000000, num_repetitions=4,
+                 buffer_size=1000000, eps_start=0.95, learning_rate=1e-3, gamma=0.99, seed=0):
         super(Agent, self).__init__()
 
-        self.target_switch_frames = target_switch_frames
         self.eps_start = eps_start
         self.buffer_size = buffer_size
+        self.batch_size = batch_size
         self.learning_rate = learning_rate
+        self.num_repetitions = num_repetitions
         self.gamma = gamma
         self.max_frames = max_frames
         self.seed = 0
@@ -144,17 +146,17 @@ class DQNEpsilonGreedyAgent(Agent):
             return
 
         if self._env_done:
-            # Train the network
-            for i in range(1):
-                obs_batch, act_batch, rew_batch, _, _ = self._replay.sample(128)
+            for i in range(self.num_repetitions):
+                # Train the network (VOLATILE=FALSE IS VERY IMPORTANT)
+                obs_batch, act_batch, rew_batch, _, _ = self._replay.sample(self.batch_size)
                 obs_batch = Observation.to_torch(obs_batch)
-                act_batch = Variable(LongTensor(act_batch))
-                rew_batch = Variable(FloatTensor(rew_batch))
+                act_batch = Variable(LongTensor(act_batch), volatile=False)
+                rew_batch = Variable(FloatTensor(rew_batch), volatile=False)
 
                 estimated_values = self._behavior_q.forward(obs_batch)
                 estimated_values = estimated_values.view(estimated_values.size(0), -1)
                 act_batch = act_batch.view(act_batch.size(0), 1)
-                loss = t.mean((rew_batch - t.gather(estimated_values, dim=-1, index=act_batch)) ** 2)
+                loss = F.mse_loss(t.gather(estimated_values, dim=-1, index=act_batch), rew_batch)
 
                 self._optimizer.zero_grad()
                 loss.backward()
@@ -162,6 +164,7 @@ class DQNEpsilonGreedyAgent(Agent):
 
             # Reset the episode
             self._env_obs, self._env_rew, self._env_done, _ = self._env.reset()
+            #print
 
         self._features = Observation.to_features(self._env_obs, self._env)
 
@@ -209,6 +212,6 @@ class DQNEpsilonGreedyAgent(Agent):
         }
 
     def name(self):
-        return "ddqn-eps_{}-lr_{}-gamma_{}-buffer_size_{}-target_switch_{}-max_frames_{}-seed_{}" \
-            .format(self.eps_start, self.learning_rate, self.gamma, self.buffer_size,
-                    self.target_switch_frames, self.max_frames, self.seed)
+        return "ddqn-eps_{}-num_reps_{}-lr_{}-gamma_{}-buffer_size_{}-batch_size_{}-max_frames_{}-seed_{}" \
+            .format(self.eps_start, self.num_repetitions, self.learning_rate, self.gamma, self.buffer_size,
+                    self.batch_size, self.max_frames, self.seed)
