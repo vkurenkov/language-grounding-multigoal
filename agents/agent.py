@@ -22,3 +22,14 @@ class Agent:
 
     def name(self):
         raise NotImplementedError()
+
+    def __getstate__(self):
+        '''
+        Remove log writer from pickling.
+        '''
+        state = self.__dict__.copy()
+        del state['_log_writer']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
