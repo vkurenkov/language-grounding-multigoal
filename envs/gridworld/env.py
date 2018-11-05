@@ -425,8 +425,8 @@ class FindItemsEnv(gym.Env):
         if self._fixed_positions is None:
             placement = "randomized"
         else:
-            positions = "_".join([f"({x}_{y})" for (x, y) in self._fixed_positions])
-            placement = "fixed_" + positions + f"_{self._fixed_look}"
+            positions = "_".join(["(" + str(x) + "_" + str(y) + ")" for (x, y) in self._fixed_positions])
+            placement = "fixed_" + positions + "_" + str(self._fixed_look)
 
         grid = "grid_" + str(self._grid._width) + "_" + str(self._grid._height) + "_" + str(self._num_items)
         instruction = "instr_" + "_".join([str(item) for item in self.instruction])
@@ -439,7 +439,7 @@ class FindItemsEnv(gym.Env):
         elif self._reward_type == self.REWARD_TYPE_LAST_ITEM:
             rew_type = "rew_last_item"
 
-        return f"gridworld/{obs_type}/{placement}/{grid}/{instruction}/{rew_type}/"
+        return "/".join(["gridworld", str(obs_type), str(placement), str(grid), str(instruction), str(rew_type)])
 
 class FindItemsVisualizator:
     @staticmethod
