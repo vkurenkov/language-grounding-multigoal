@@ -4,18 +4,10 @@ import pickle
 
 from tensorboardX import SummaryWriter
 from envs.gridworld.env import FindItemsEnv
+from envs import EnvironmentDefinition
 from agents.dqn import DQNEpsilonGreedyAgent
 from benchmarks.benchmark import TrajectoryLengthBenchmark
 from argparse import ArgumentParser
-
-
-class EnvironmentDefinition:
-    def __init__(self, env_constructor, **kwargs):
-        self._env_constructor = env_constructor
-        self._kwargs = kwargs
-
-    def build_env(self):
-        return self._env_constructor(**self._kwargs)
 
 
 def save_agent(agent, path):
@@ -35,13 +27,14 @@ args = parser.parse_args()
 
 # Define training process
 env_definition = EnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=2,
-                                       instruction=[0], must_avoid_non_targets=False,
-                                       reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS)
+                                       instruction=[1, 0], must_avoid_non_targets=False,
+                                       reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
 agent = DQNEpsilonGreedyAgent()
 writer = SummaryWriter(os.path.join(args.dir_tensorboard, agent.name()))
 
 # Define benchmarks
-trajectory_length_benchmark = TrajectoryLengthBenchmark(env_definition, n_trials=args.benchmark_trials)
+trajectory_length_benchmark = TrajectoryLengthBenchmark(env_definition, 
+                                                        n_trials=args.benchmark_trials)
 
 agent.train_init(env_definition)
 while not agent.train_is_done():

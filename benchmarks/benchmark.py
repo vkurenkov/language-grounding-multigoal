@@ -28,14 +28,20 @@ class SuccessRateBenchmark(Benchmark):
 
 
 class TrajectoryLengthBenchmark(Benchmark):
-    def __init__(self, env_definition, n_trials=10, max_steps=100):
+    def __init__(self, env_definition, n_trials=10, max_steps=100,
+                 seed=0, fixed_env=False):
         self.max_steps = max_steps
+        self.fixed_env = fixed_env
+        self.seed = seed
         return super().__init__(env_definition, n_trials)
 
     def __call__(self, agent):
         env = self.env_definition.build_env()
         lengths = []
         for i in range(self.n_trials):
+            if self.fixed_env:
+                env.seed(self.seed)
+
             obs, rew, done, _ = env.reset()
             n_steps = 0
             while not done and n_steps < self.max_steps:

@@ -3,19 +3,54 @@ import torch.nn.functional as F
 import torch as t
 import numpy as np
 import random as rand
+import copy
+import tensorboardX as tensorboard
 
 from torch import FloatTensor, LongTensor
 from torch.autograd import Variable
 from agents.agent import Agent
 
 
-class QValue(nn.Module):
+class QValueConv(nn.Module):
     def __init__(self, n_features, n_actions=8):
-        super(QValue, self).__init__()
+        super(QValueConv, self).__init__() 
 
-        self.linear = nn.Linear(n_features, n_features // 2)
-        self.linear1 = nn.Linear(n_features // 2, n_features // 4)
-        self.linear2 = nn.Linear(n_features // 4, n_actions)
+        self.linear = nn.Conv2d(3, 3, 2)
+        linear_n_features = self._out_size(self.linear, 10, 10)
+        
+        self.linear1 = nn.Conv2d(3, 3, 2)
+        linear1_n_features = self._out_size(self.linear1, linear_n_features[0], linear_n_features[1])
+        tot_features = linear1_n_features[0] * linear1_n_features[1] * linear1_n_features[2]
+
+        self.linear2 = nn.Linear(tot_features, n_actions)
+        
+    def _out_size(self, conv, width, height):
+        h_out = np.floor((height+2*conv.padding[0]-conv.dilation[0]*(conv.kernel_size[0]-1)-1)/conv.stride[0]+1)
+        w_out = np.floor((width+2*conv.padding[1]-conv.dilation[1]*(conv.kernel_size[1]-1)-1)/conv.stride[1]+1)
+        return int(w_out), int(h_out), int(conv.out_channels)
+
+    def forward(self, features):
+        '''
+        input:
+            features - of size (batch_size, n_features)
+        output:
+            action_values - estimated action values of size (batch_size, n_actions)
+        '''
+        temp = F.relu(self.linear1(F.relu(self.linear(features))))
+        temp = temp.view(features.size(0), -1)
+        return self.linear2(temp)
+
+class QValueLinear(nn.Module):
+    def __init__(self, n_features, n_actions=8):
+        super(QValueLinear, self).__init__()
+
+        self.values = nn.Sequential(
+            nn.Linear(n_features, n_features),
+            nn.ReLU(),
+            nn.Linear(n_features, n_features),
+            nn.ReLU(),
+            nn.Linear(n_features, n_actions)
+        )
         
     def forward(self, features):
         '''
@@ -24,7 +59,10 @@ class QValue(nn.Module):
         output:
             action_values - estimated action values of size (batch_size, n_actions)
         '''
-        return self.linear2(F.relu(self.linear1(F.relu(self.linear(features)))))
+        batch_size = features.size(0)
+        features = features.view(batch_size, -1)
+        
+        return self.values(features)
 
 
 class Observation:
@@ -32,17 +70,26 @@ class Observation:
     def to_features(observation, env):
         look_dir = env._agent_look_dir()
         agent_pos = observation[0]
+        look_pos = (agent_pos[0] + look_dir[0], agent_pos[1] + look_dir[1])
         grid = observation[2]
 
-        feature_agent_pos = np.array([agent_pos[0], agent_pos[1]])
-        feature_agent_look = np.array([look_dir[0], look_dir[1]])
-        feature_grid = grid.flatten()
+        feature_agent_pos = np.zeros((10, 10))
+        feature_agent_pos[agent_pos[0], agent_pos[1]] = 1.0
+        feature_agent_pos = feature_agent_pos.reshape(10, 10, 1)
 
-        return np.concatenate([feature_agent_pos, feature_agent_look, feature_grid]).reshape(1, -1)
+        feature_agent_look_pos = np.zeros((10, 10))
+        if 0 <= look_pos[0] < 10:
+            if 0 <= look_pos[1] < 10:
+                feature_agent_look_pos[look_pos[0], look_pos[1]] = 1.0
+        feature_agent_look_pos = feature_agent_look_pos.reshape(10, 10, 1)
+
+        grid = grid.reshape(10, 10, -1)
+
+        return np.dstack((grid, feature_agent_look_pos, feature_agent_pos)).reshape(1, 4, 10, 10)
 
     @staticmethod
     def num_features():
-        return 204
+        return 400
 
     @staticmethod
     def to_torch(features, volatile=False):
@@ -111,11 +158,15 @@ class ReplayBuffer(object):
 
 
 class DQNEpsilonGreedyAgent(Agent):
-    def __init__(self, batch_size=256, max_frames=1000000, num_repetitions=4,
-                 buffer_size=1000000, eps_start=0.95, learning_rate=1e-3, gamma=0.99, seed=0):
+    def __init__(self, batch_size=1024, max_frames=100000, num_repetitions=1,
+                 buffer_size=1000000, eps_start=0.99, eps_end=0.01, eps_frames=100000,
+                 learning_rate=1e-3, gamma=0.70, seed=0, episode_len=100):
         super(Agent, self).__init__()
 
         self.eps_start = eps_start
+        self.eps_end = eps_end
+        self.eps_frames = eps_frames
+
         self.buffer_size = buffer_size
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -123,6 +174,9 @@ class DQNEpsilonGreedyAgent(Agent):
         self.gamma = gamma
         self.max_frames = max_frames
         self.seed = 0
+        self.episode_len = episode_len
+
+        self._log_writer = tensorboard.SummaryWriter(".tensorboard/methods/2-items-fixed" + self.name())
 
     def train_init(self, env_definition):
         self._env = env_definition.build_env()
@@ -135,41 +189,59 @@ class DQNEpsilonGreedyAgent(Agent):
         rand.seed(self.seed)
 
         # Q-Value approximator and optimizator
-        self._behavior_q = QValue(Observation.num_features(), self._env.action_space.n)
-        self._optimizer = t.optim.Adam(self._behavior_q.parameters(), lr=self.learning_rate)
+        self._behavior_q = QValueLinear(Observation.num_features(), self._env.action_space.n).cuda()
+        self._online_q = QValueLinear(Observation.num_features(), self._env.action_space.n).cuda()
+        self._optimizer = t.optim.Adam(self._online_q.parameters(), lr=self.learning_rate)
         self._replay = ReplayBuffer(size=self.buffer_size)
 
         self._env_obs, self._env_rew, self._env_done, _ = self._env.reset()
+        self._cur_episode_step = 0
+        self._trajectory = []
+        self._behavior_q.eval()
 
     def train_step(self):
         if self.train_is_done():
             return
 
-        if self._env_done:
-            for i in range(self.num_repetitions):
-                # Train the network (VOLATILE=FALSE IS VERY IMPORTANT)
+        if self.train_num_steps() % 1000 == 0:
+            self._behavior_q = copy.deepcopy(self._online_q)
+            self._behavior_q.eval()
+
+        if self._env_done or self._cur_episode_step >= self.episode_len:
+            self._log_writer.add_scalar("train_traj_len", self._cur_episode_step, self.train_num_steps())
+
+            # Compute returns
+            q_value = 0.0
+            for point in reversed(self._trajectory):
+                q_value = point[2] + q_value * self.gamma
+                self._replay.add(point[0], point[1], q_value, point[3], point[4])
+            self._trajectory = []
+
+            # Train the network (VOLATILE=FALSE IS VERY IMPORTANT)
+            if len(self._replay) > 10000:
                 obs_batch, act_batch, rew_batch, _, _ = self._replay.sample(self.batch_size)
-                obs_batch = Observation.to_torch(obs_batch)
-                act_batch = Variable(LongTensor(act_batch), volatile=False)
-                rew_batch = Variable(FloatTensor(rew_batch), volatile=False)
+                obs_batch = t.squeeze(Observation.to_torch(obs_batch)).cuda()
+                act_batch = Variable(LongTensor(act_batch), volatile=False).cuda()
+                rew_batch = Variable(FloatTensor(rew_batch), volatile=False).cuda()
+                for i in range(self.num_repetitions):
+                    estimated_values = self._online_q.forward(obs_batch)
+                    estimated_values = estimated_values.view(estimated_values.size(0), -1)
+                    act_batch = act_batch.view(act_batch.size(0), 1)
+                    loss = F.mse_loss(t.gather(estimated_values, dim=-1, index=act_batch), rew_batch)
 
-                estimated_values = self._behavior_q.forward(obs_batch)
-                estimated_values = estimated_values.view(estimated_values.size(0), -1)
-                act_batch = act_batch.view(act_batch.size(0), 1)
-                loss = F.mse_loss(t.gather(estimated_values, dim=-1, index=act_batch), rew_batch)
-
-                self._optimizer.zero_grad()
-                loss.backward()
-                self._optimizer.step()
+                    self._optimizer.zero_grad()
+                    loss.backward()
+                    self._optimizer.step()
+                    self._log_writer.add_scalar("q_value_loss", loss, self.train_num_steps())
 
             # Reset the episode
             self._env_obs, self._env_rew, self._env_done, _ = self._env.reset()
-            #print
+            self._cur_episode_step = 0
 
         self._features = Observation.to_features(self._env_obs, self._env)
 
         # Select an action in an epsilon-greedy way
-        action_values = self._behavior_q.forward(Observation.to_torch(self._features, volatile=True))
+        action_values = self._behavior_q.forward(Observation.to_torch(self._features, volatile=True).cuda())
         action = self._env.action_space.sample()
         if np.random.rand() > self._eps:
             action = t.max(action_values, dim=-1)[1].data[0]
@@ -177,14 +249,16 @@ class DQNEpsilonGreedyAgent(Agent):
         # Take an action and keep current observation
         self._env_obs, self._env_rew, self._env_done, _ = self._env.step(action)
         self._features_after = Observation.to_features(self._env_obs, self._env)
-        self._replay.add(self._features, action, self._env_rew, self._features_after, self._env_done)
+
+        self._trajectory.append((self._features, action, self._env_rew, self._features_after, self._env_done))
 
         # Update current observation
         self._features = self._features_after
 
         # Update epsilon and number of frames
         self._num_frames += 1
-        self._eps = self.eps_start - (self.eps_start) * np.clip((self._num_frames / self.max_frames), 0.0, 1.0)
+        self._cur_episode_step += 1
+        self._eps = self.eps_start - (self.eps_start - self.eps_end) * np.clip((self._num_frames / self.eps_frames), 0.0, 1.0)
 
     def train_num_steps(self):
         return self._num_frames
@@ -194,7 +268,7 @@ class DQNEpsilonGreedyAgent(Agent):
 
     def act(self, observation):
         features = Observation.to_features(observation, self._env)
-        action_values = self._behavior_q.forward(Observation.to_torch(features, volatile=True))
+        action_values = self._behavior_q.forward(Observation.to_torch(features, volatile=True).cuda())
         action = self._env.action_space.sample()
         if np.random.rand() > self._eps:
             action = t.max(action_values, dim=-1)[1].data[0]
@@ -212,6 +286,6 @@ class DQNEpsilonGreedyAgent(Agent):
         }
 
     def name(self):
-        return "ddqn-eps_{}-num_reps_{}-lr_{}-gamma_{}-buffer_size_{}-batch_size_{}-max_frames_{}-seed_{}" \
-            .format(self.eps_start, self.num_repetitions, self.learning_rate, self.gamma, self.buffer_size,
-                    self.batch_size, self.max_frames, self.seed)
+        return "ddqn-epis_len_{}-eps_{}-num_reps_{}-lr_{}-gamma_{}-buffer_size_{}-batch_size_{}-max_frames_{}-seed_{}-fixed_env-{}" \
+            .format(self.episode_len, self.eps_start, self.num_repetitions, self.learning_rate, self.gamma, self.buffer_size,
+                    self.batch_size, self.max_frames, self.seed, self.fixed_env)
