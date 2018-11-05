@@ -91,7 +91,8 @@ class FindItemsEnv(gym.Env):
     REWARD_TYPE_LAST_ITEM = 2
     
     def __init__(self, width, height, num_items, reward_type,
-                 instruction=[0], must_avoid_non_targets=False):
+                 instruction=[0], must_avoid_non_targets=False,
+                 fixed_positions=None, fixed_look=None):
         '''
         num_items - number of unique items on the grid
                     no more than this number of items will be placed on the grid
@@ -99,11 +100,25 @@ class FindItemsEnv(gym.Env):
         must_avoid_non_targets - whether the agent must avoid non current target objects
         instruction - an array of items that must be visited in the specified order
                 e.g [0, 2, 1] - first the agent must visit 0, then 2, then 1
+        fixed_positions - an array of (x, y) positions to place an agent and items
+                        - first element is for the agent
+                        - must be of size num_items + 1
+        fixed_look - WEST | EAST | NORTH | SOUTH
         '''
         self._num_items = num_items
         self._grid = Grid(width, height, num_items)
         self._reward_type = reward_type
         self._must_avoid_non_targets = must_avoid_non_targets
+
+        if fixed_positions is not None and len(fixed_positions) != (self._num_items + 1):
+            raise Exception("Number of fixed positions must be equal to number of items + 1 (for the agent).")
+        if fixed_positions is not None and fixed_look is None:
+            raise Exception("Fixed positions and fixed look must be specified alltogether!")
+        if fixed_look is not None and fixed_positions is None:
+            raise Exception("Fixed positions and fixed look must be specified alltogether!")
+
+        self._fixed_positions = fixed_positions
+        self._fixed_look = fixed_look
 
         self.action_space = gym.spaces.Discrete(6)
         self.observation_space = gym.spaces.Dict({
@@ -167,11 +182,19 @@ class FindItemsEnv(gym.Env):
     def _randomly_place_items_and_agent(self):
         free_cells = [(x, y) for x in range(self._grid._width) for y in range(self._grid._height)]
         chosen_indices = np.random.choice(len(free_cells), size=self._num_items + 1, replace=False)
-        chosen_cells = [free_cells[index] for index in chosen_indices]
+
+        if self._fixed_positions is not None:
+            chosen_cells = self._fixed_positions
+        else:
+            chosen_cells = [free_cells[index] for index in chosen_indices]
 
         # Randomly place and rotate the agent
         self._place_agent_at(chosen_cells[0][0], chosen_cells[0][1])
-        self._look_agent_at(np.random.choice(["WEST", "EAST", "NORTH", "SOUTH"]))
+
+        if self._fixed_look is not None:
+            self._look_agent_at(str.upper(self._fixed_look))
+        else:
+            self._look_agent_at(np.random.choice(["WEST", "EAST", "NORTH", "SOUTH"]))
 
         # Spawn other items
         self._items_pos = {}
@@ -397,6 +420,26 @@ class FindItemsEnv(gym.Env):
 
         return output
 
+    def name(self):
+        obs_type = "full_obs"
+        if self._fixed_positions is None:
+            placement = "randomized"
+        else:
+            positions = "_".join([f"({x}_{y})" for (x, y) in self._fixed_positions])
+            placement = "fixed_" + positions + f"_{self._fixed_look}"
+
+        grid = "grid_" + str(self._grid._width) + "_" + str(self._grid._height) + "_" + str(self._num_items)
+        instruction = "instr_" + "_".join([str(item) for item in self.instruction])
+
+        rew_type = "rew_unknown"
+        if self._reward_type == self.REWARD_TYPE_MIN_ACTIONS:
+            rew_type = "rew_min_action"
+        elif self._reward_type == self.REWARD_TYPE_EVERY_ITEM:
+            rew_type = "rew_every_item"
+        elif self._reward_type == self.REWARD_TYPE_LAST_ITEM:
+            rew_type = "rew_last_item"
+
+        return f"gridworld/{obs_type}/{placement}/{grid}/{instruction}/{rew_type}/"
 
 class FindItemsVisualizator:
     @staticmethod

@@ -2,7 +2,7 @@ class EnvironmentDefinition:
     def __init__(self, env_constructor, name, **kwargs):
         self._env_constructor = env_constructor
         self._kwargs = kwargs
-        self._name = _get_name()
+        self._name = self._get_name()
 
     def _get_name(self):
         return self._env_constructor(**self._kwargs).name()
