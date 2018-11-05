@@ -176,8 +176,6 @@ class DQNEpsilonGreedyAgent(Agent):
         self.seed = 0
         self.episode_len = episode_len
 
-        self._log_writer = tensorboard.SummaryWriter(".tensorboard/methods/2-items-fixed" + self.name())
-
     def train_init(self, env_definition):
         self._env = env_definition.build_env()
         self._eps = self.eps_start
@@ -286,6 +284,6 @@ class DQNEpsilonGreedyAgent(Agent):
         }
 
     def name(self):
-        return "ddqn-epis_len_{}-eps_{}-num_reps_{}-lr_{}-gamma_{}-buffer_size_{}-batch_size_{}-max_frames_{}-seed_{}-fixed_env-{}" \
+        return "ddqn-epis_len_{}-eps_{}-num_reps_{}-lr_{}-gamma_{}-buffer_size_{}-batch_size_{}-max_frames_{}-seed_{}" \
             .format(self.episode_len, self.eps_start, self.num_repetitions, self.learning_rate, self.gamma, self.buffer_size,
-                    self.batch_size, self.max_frames, self.seed, self.fixed_env)
+                    self.batch_size, self.max_frames, self.seed)

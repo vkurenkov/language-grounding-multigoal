@@ -1,4 +1,7 @@
 class Agent:
+    def log_init(self, summary_writer):
+        self._log_writer = summary_writer
+        
     def train_init(self, env_definition):
         raise NotImplementedError()
 

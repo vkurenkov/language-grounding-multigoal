@@ -4,7 +4,7 @@ import pickle
 
 from tensorboardX import SummaryWriter
 from envs.gridworld.env import FindItemsEnv
-from envs import EnvironmentDefinition
+from envs.definitions import EnvironmentDefinition
 from agents.dqn import DQNEpsilonGreedyAgent
 from benchmarks.benchmark import TrajectoryLengthBenchmark
 from argparse import ArgumentParser
@@ -30,12 +30,13 @@ env_definition = EnvironmentDefinition(FindItemsEnv, width=10, height=10, num_it
                                        instruction=[1, 0], must_avoid_non_targets=False,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
 agent = DQNEpsilonGreedyAgent()
-writer = SummaryWriter(os.path.join(args.dir_tensorboard, agent.name()))
+writer = SummaryWriter(os.path.join(args.dir_tensorboard, env_definition.name(), agent.name()))
 
 # Define benchmarks
 trajectory_length_benchmark = TrajectoryLengthBenchmark(env_definition, 
                                                         n_trials=args.benchmark_trials)
 
+agent.log_init(writer)
 agent.train_init(env_definition)
 while not agent.train_is_done():
     agent.train_step()
