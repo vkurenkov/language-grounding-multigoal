@@ -278,7 +278,12 @@ class FindItemsEnv(gym.Env):
 
     def _update_visited_items(self):
         observed_item = self._agent_sees()
-        self._add_to_visited(observed_item)
+
+        if len(self._visited_items) != 0:
+            if self._visited_items[-1] != observed_item:
+                self._add_to_visited(observed_item)
+        else:
+            self._add_to_visited(observed_item)
 
     def _current_observation(self):
         return (self._agent_pos, self._agent_look, self._grid.get_grid())
@@ -316,6 +321,8 @@ class FindItemsEnv(gym.Env):
                 else:
                     if len(self._items_visit_order) == len(self._visited_items) + 1:
                         return True
+                    else:
+                        return False
 
     def _gym_output(self):
         '''
