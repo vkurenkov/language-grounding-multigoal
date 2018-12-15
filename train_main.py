@@ -27,9 +27,11 @@ args = parser.parse_args()
 
 # Define training process
 env_definition = EnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=2,
-                                       instruction=[1, 0], must_avoid_non_targets=False,
+                                       instruction=[1], must_avoid_non_targets=False,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
-agent = DQNEpsilonGreedyAgent()
+                                       #fixed_positions=[(0,0), (5, 5), (3, 3)],
+                                       #fixed_look="EAST")
+agent = DQNEpsilonGreedyAgent(max_frames=50000000,eps_frames=25000000,gamma=0.90,batch_size=2048,learning_rate=1e-3)
 writer = SummaryWriter(os.path.join(args.dir_tensorboard, env_definition.name(), agent.name()))
 
 # Define benchmarks

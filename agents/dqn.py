@@ -187,8 +187,8 @@ class DQNEpsilonGreedyAgent(Agent):
         rand.seed(self.seed)
 
         # Q-Value approximator and optimizator
-        self._behavior_q = QValueLinear(Observation.num_features(), self._env.action_space.n).cuda()
-        self._online_q = QValueLinear(Observation.num_features(), self._env.action_space.n).cuda()
+        self._behavior_q = QValueLinear(Observation.num_features(), self._env.action_space.n)#.cuda()
+        self._online_q = QValueLinear(Observation.num_features(), self._env.action_space.n)#.cuda()
         self._optimizer = t.optim.Adam(self._online_q.parameters(), lr=self.learning_rate)
         self._replay = ReplayBuffer(size=self.buffer_size)
 
@@ -206,7 +206,10 @@ class DQNEpsilonGreedyAgent(Agent):
             self._behavior_q.eval()
 
         if self._env_done or self._cur_episode_step >= self.episode_len:
+            success = self._env_done and self._env_rew > 0.0
+            
             self._log_writer.add_scalar("train_traj_len", self._cur_episode_step, self.train_num_steps())
+            self._log_writer.add_scalar("train_succ_rate", int(success), self.train_num_steps())
 
             # Compute returns
             q_value = 0.0
@@ -218,9 +221,9 @@ class DQNEpsilonGreedyAgent(Agent):
             # Train the network (VOLATILE=FALSE IS VERY IMPORTANT)
             if len(self._replay) > 10000:
                 obs_batch, act_batch, rew_batch, _, _ = self._replay.sample(self.batch_size)
-                obs_batch = t.squeeze(Observation.to_torch(obs_batch)).cuda()
-                act_batch = Variable(LongTensor(act_batch), volatile=False).cuda()
-                rew_batch = Variable(FloatTensor(rew_batch), volatile=False).cuda()
+                obs_batch = t.squeeze(Observation.to_torch(obs_batch))#.cuda()
+                act_batch = Variable(LongTensor(act_batch), volatile=False)#.cuda()
+                rew_batch = Variable(FloatTensor(rew_batch), volatile=False)#.cuda()
                 for i in range(self.num_repetitions):
                     estimated_values = self._online_q.forward(obs_batch)
                     estimated_values = estimated_values.view(estimated_values.size(0), -1)
@@ -239,7 +242,7 @@ class DQNEpsilonGreedyAgent(Agent):
         self._features = Observation.to_features(self._env_obs, self._env)
 
         # Select an action in an epsilon-greedy way
-        action_values = self._behavior_q.forward(Observation.to_torch(self._features, volatile=True).cuda())
+        action_values = self._behavior_q.forward(Observation.to_torch(self._features, volatile=True))#.cuda())
         action = self._env.action_space.sample()
         if np.random.rand() > self._eps:
             action = t.max(action_values, dim=-1)[1].data[0]
@@ -266,7 +269,7 @@ class DQNEpsilonGreedyAgent(Agent):
 
     def act(self, observation):
         features = Observation.to_features(observation, self._env)
-        action_values = self._behavior_q.forward(Observation.to_torch(features, volatile=True).cuda())
+        action_values = self._behavior_q.forward(Observation.to_torch(features, volatile=True))#.cuda())
         action = self._env.action_space.sample()
         if np.random.rand() > self._eps:
             action = t.max(action_values, dim=-1)[1].data[0]
