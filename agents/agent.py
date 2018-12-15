@@ -1,26 +1,30 @@
+import gym
+from typing import Optional, Dict
+
+
 class Agent:
-    def log_init(self, summary_writer):
+    def log_init(self, summary_writer) -> None:
         self._log_writer = summary_writer
         
-    def train_init(self, env_definition):
+    def train_init(self, env_definition) -> None:
         raise NotImplementedError()
 
-    def train_step(self):
+    def train_step(self) -> None:
         raise NotImplementedError()
 
-    def train_num_steps(self):
+    def train_num_steps(self) -> int:
         raise NotImplementedError()
 
-    def train_is_done(self):
+    def train_is_done(self) -> bool:
         raise NotImplementedError()
 
-    def act(self, observation):
+    def act(self, observation, env: Optional[gym.Env] = None) -> Optional[int]:
         raise NotImplementedError()
 
-    def parameters(self):
+    def parameters(self) -> Dict:
         raise NotImplementedError()
 
-    def name(self):
+    def name(self) -> str:
         raise NotImplementedError()
 
     def __getstate__(self):

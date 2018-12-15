@@ -3,11 +3,16 @@ import sys
 import pickle
 
 from tensorboardX import SummaryWriter
-from envs.gridworld.env import FindItemsEnv
+from envs.gridworld_simple.env import FindItemsEnv
 from envs.definitions import EnvironmentDefinition
 from agents.dqn import DQNEpsilonGreedyAgent
+from agents.perfect import PerfectAgent
 from benchmarks.benchmark import TrajectoryLengthBenchmark
 from argparse import ArgumentParser
+
+
+AGENT_PERFECT = "perfect"
+AGENT_DQN     = "dqn"
 
 
 def save_agent(agent, path):
@@ -18,6 +23,7 @@ def save_agent(agent, path):
 
 # Command line interface
 parser = ArgumentParser()
+parser.add_argument("--agent", type=str, default=AGENT_PERFECT)
 parser.add_argument("--dir-tensorboard", type=str, default=".tensorboard")
 parser.add_argument("--dir-checkpoints", type=str, default=".checkpoints")
 parser.add_argument("--benchmark-trials", type=int, default=10)
@@ -27,11 +33,17 @@ args = parser.parse_args()
 
 # Define training process
 env_definition = EnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=2,
-                                       instruction=[1], must_avoid_non_targets=False,
+                                       instruction=[1], must_avoid_non_targets=True,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
                                        #fixed_positions=[(0,0), (5, 5), (3, 3)],
                                        #fixed_look="EAST")
-agent = DQNEpsilonGreedyAgent(max_frames=50000000,eps_frames=25000000,gamma=0.90,batch_size=2048,learning_rate=1e-3)
+
+# Define an agent
+if args.agent == AGENT_DQN:
+    agent = DQNEpsilonGreedyAgent(max_frames=50000000,eps_frames=25000000,gamma=0.90,batch_size=2048,learning_rate=1e-3)
+else:
+    agent = PerfectAgent()
+
 writer = SummaryWriter(os.path.join(args.dir_tensorboard, env_definition.name(), agent.name()))
 
 # Define benchmarks
@@ -52,4 +64,7 @@ while not agent.train_is_done():
 
     # Checkpointing
     if agent.train_num_steps() % args.checkpoint_every == 0:
-        save_agent(agent, os.path.join(args.dir_checkpoints, agent.name() + "-{}.agent".format(agent.train_num_steps()))) 
+        save_agent(agent, os.path.join(args.dir_checkpoints, agent.name() + "-{}.agent".format(agent.train_num_steps())))
+
+# Final benchmarking
+print(trajectory_length_benchmark(agent))

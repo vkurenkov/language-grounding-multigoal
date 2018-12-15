@@ -5,10 +5,12 @@ import numpy as np
 import random as rand
 import copy
 import tensorboardX as tensorboard
+import gym
 
 from torch import FloatTensor, LongTensor
 from torch.autograd import Variable
 from agents.agent import Agent
+from typing import Optional
 
 
 class QValueConv(nn.Module):
@@ -267,7 +269,7 @@ class DQNEpsilonGreedyAgent(Agent):
     def train_is_done(self):
         return self._num_frames >= self.max_frames
 
-    def act(self, observation):
+    def act(self, observation, env: Optional[gym.Env] = None):
         features = Observation.to_features(observation, self._env)
         action_values = self._behavior_q.forward(Observation.to_torch(features, volatile=True))#.cuda())
         action = self._env.action_space.sample()
