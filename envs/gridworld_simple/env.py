@@ -154,9 +154,9 @@ class FindItemsEnv(gym.Env):
 
         # One item or non-avoidance of the target objects degrades to a manhattan distance
         if self._num_items == 1 or not self._must_avoid_non_targets:
-            return self._get_distance(self._agent_pos, self._items_pos[self._current_target_item()])
+            return -self._get_distance(self._agent_pos, self._items_pos[self._cur_target_item()])
         else:
-            return self._shortest_paths.get_path(self._agent_pos, self._current_target_item())
+            return -len(self._shortest_paths.get_path(self._agent_pos, self._cur_target_item()))
 
     def _randomly_place_items_and_agent(self):
         free_cells = [(x, y) for x in range(self._grid._width) for y in range(self._grid._height)]
@@ -212,9 +212,8 @@ class FindItemsEnv(gym.Env):
 
     def _update_visited_items(self):
         observed_item = self._agent_stands_at()
-
-        if len(self._visited_items) != 0:
-            if self._visited_items[-1] != observed_item:
+        if not self._must_avoid_non_targets:
+            if observed_item == self._cur_target_item():
                 self._add_to_visited(observed_item)
         else:
             self._add_to_visited(observed_item)
@@ -288,18 +287,18 @@ class FindItemsEnv(gym.Env):
         self._reset_instruction(self.instruction)
         self._visited_items = []
 
-        # First obtain current observation
-        output = self._gym_output()
-
-        # Then update visited items
-        self._update_visited_items()
-
         # Build shortest paths to items from every point
         self._shortest_paths = FindItemsEnvShortestPaths(self)
 
         # Reset until the environment is solvable
         if self._not_solvable():
             return self.reset()
+
+        # Obtain current observation
+        output = self._gym_output()
+
+        # Then update visited items
+        self._update_visited_items()
         
         return output
 

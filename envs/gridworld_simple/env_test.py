@@ -63,14 +63,97 @@ def test_env_should_support_multiple_items():
     assert grid.shape[0] == 3 
 
 
-def test_env_should_support_reward_as_minimum_number_of_actions():
+def test_env_should_support_reward_as_minimum_number_of_actions_when_avoiding_non_targets():
+    # Seed: 1; Instruction: [0, 1, 2]
+    # # # # # # # # # # # # 
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 0 - #
+    # - - - 1 - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 2 - #
+    # - - - - - - - - A - #
+    # # # # # # # # # # # # 
     env = FindItemsEnv(10, 10, 3,
             reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
-            instruction=[1, 0, 2],
+            instruction=[0, 1, 2],
             must_avoid_non_targets=True)
-    env.seed(0)
-    _, reward, *_ = env.reset(0)
 
+    # At the beginning
+    env.seed(1)
+    _, reward, *_ = env.reset()
+    assert reward == -6
+
+    # After the first item
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+
+    assert reward == 0
+
+    # Finishing
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == 0
+
+    # To be sure
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == -6
+
+
+def test_env_should_support_reward_as_minimum_number_of_actions_when_not_avoiding_non_targets():
+    # Seed: 1; Instruction: [0, 1, 2]
+    # # # # # # # # # # # # 
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 0 - #
+    # - - - 1 - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 2 - #
+    # - - - - - - - - A - #
+    # # # # # # # # # # # # 
+    env = FindItemsEnv(10, 10, 3,
+            reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
+            instruction=[0, 1, 2],
+            must_avoid_non_targets=False)
+
+    # At the beginning
+    env.seed(1)
+    _, reward, *_ = env.reset()
+    assert reward == -4
+
+    # After the first item
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+
+    assert reward == 0
+
+    # Finishing
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == 0
+
+    # To be sure
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
     assert reward == -6
 
 
