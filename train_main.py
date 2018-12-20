@@ -4,10 +4,10 @@ import pickle
 
 from tensorboardX import SummaryWriter
 from envs.gridworld_simple.env import FindItemsEnv
-from envs.definitions import EnvironmentDefinition
+from envs.definitions import GoalEnvironmentDefinition
 from agents.dqn import DQNEpsilonGreedyAgent
 from agents.perfect import PerfectAgent
-from benchmarks.benchmark import TrajectoryLengthBenchmark
+from benchmarks.benchmark import SuccessTrajectoryLengthBenchmark, SuccessRateBenchmark
 from argparse import ArgumentParser
 
 
@@ -32,7 +32,7 @@ parser.add_argument("--checkpoint-every", type=int, default=10000)
 args = parser.parse_args()
 
 # Define training process
-env_definition = EnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=2,
+env_definition = GoalEnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=2,
                                        instruction=[1], must_avoid_non_targets=True,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
                                        #fixed_positions=[(0,0), (5, 5), (3, 3)],
@@ -47,8 +47,12 @@ else:
 writer = SummaryWriter(os.path.join(args.dir_tensorboard, env_definition.name(), agent.name()))
 
 # Define benchmarks
-trajectory_length_benchmark = TrajectoryLengthBenchmark(env_definition, 
-                                                        n_trials=args.benchmark_trials)
+trajectory_length_benchmark = SuccessTrajectoryLengthBenchmark(
+    env_definition, n_trials=args.benchmark_trials
+)
+success_rate_benchmark      = SuccessRateBenchmark(
+    env_definition, n_trials=args.benchmark_trials
+)
 
 agent.log_init(writer)
 agent.train_init(env_definition)
@@ -67,4 +71,5 @@ while not agent.train_is_done():
         save_agent(agent, os.path.join(args.dir_checkpoints, agent.name() + "-{}.agent".format(agent.train_num_steps())))
 
 # Final benchmarking
-print(trajectory_length_benchmark(agent))
+print("Mean benchmark trajectory length: {}".format(trajectory_length_benchmark(agent)))
+print("Mean success rate: {}".format(success_rate_benchmark(agent)))
