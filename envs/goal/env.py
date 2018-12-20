@@ -3,9 +3,9 @@ import enum
 
 
 class GoalStatus(enum.Enum):
-    SUCCESS     = 0
-    FAILURE     = 1
-    IN_PROGRESS = 2
+    SUCCESS     = 1
+    FAILURE     = 2
+    IN_PROGRESS = 3
 
 
 class GoalEnv(gym.Env):

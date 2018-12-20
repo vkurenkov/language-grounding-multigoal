@@ -82,16 +82,16 @@ class FindItemsEnv(GoalEnv):
         - The agent's current position (not included in the grid)
     '''
 
-    ACTION_MOVE_UP = 0
-    ACTION_MOVE_DOWN = 1
-    ACTION_MOVE_LEFT = 2
-    ACTION_MOVE_RIGHT = 3
+    ACTION_MOVE_UP = 1
+    ACTION_MOVE_DOWN = 2
+    ACTION_MOVE_LEFT = 3
+    ACTION_MOVE_RIGHT = 4
 
     NO_OBJECT = -1
 
-    REWARD_TYPE_MIN_ACTIONS = 0
-    REWARD_TYPE_EVERY_ITEM = 1
-    REWARD_TYPE_LAST_ITEM = 2
+    REWARD_TYPE_MIN_ACTIONS = 1
+    REWARD_TYPE_EVERY_ITEM = 2
+    REWARD_TYPE_LAST_ITEM = 3
     
     def __init__(self, width, height, num_items, reward_type,
                  instruction=[0], must_avoid_non_targets=False,

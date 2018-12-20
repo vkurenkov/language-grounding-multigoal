@@ -1,4 +1,11 @@
-class EnvironmentDefinition:
+class GoalEnvironmentDefinition:
+    """
+    The environment must have following functions:
+        - reset
+        - step
+        - seed
+        - goal_status
+    """
     def __init__(self, env_constructor, **kwargs):
         self._env_constructor = env_constructor
         self._kwargs = kwargs
