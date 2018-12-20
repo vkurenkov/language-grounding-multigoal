@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 from agents.agent import Agent
 from envs.definitions import EnvironmentDefinition
@@ -22,7 +23,13 @@ class SuccessRateBenchmark(Benchmark):
         for i in range(self.n_trials):
             obs, rew, done, _ = env.reset()
             while not done:
-                obs, rew, done, _ = env.step(agent.act(obs, env))
+                action = agent.act(obs, env)
+                if action:
+                    obs, rew, done, _ = env.step(agent.act(obs, env))
+                else:
+                    warnings.warn("An agent could not choose an action. Since the idle action is not supported, the trial is terminated.")
+                    done = True
+
                 if rew > 0.0 and done:
                     n_success += 1
 
@@ -30,10 +37,9 @@ class SuccessRateBenchmark(Benchmark):
 
 
 class TrajectoryLengthBenchmark(Benchmark):
-    def __init__(self, env_definition: EnvironmentDefinition, n_trials=10, max_steps=100,
-                 seed=0, fixed_env=False):
+    def __init__(self, env_definition: EnvironmentDefinition, 
+            n_trials=10, max_steps=100, seed=0):
         self.max_steps = max_steps
-        self.fixed_env = fixed_env
         self.seed = seed
         return super().__init__(env_definition, n_trials)
 
@@ -41,14 +47,17 @@ class TrajectoryLengthBenchmark(Benchmark):
         env = self.env_definition.build_env()
         lengths = []
         for i in range(self.n_trials):
-            if self.fixed_env:
-                env.seed(self.seed)
-
             obs, rew, done, _ = env.reset()
             n_steps = 0
             while not done and n_steps < self.max_steps:
-                obs, rew, done, _ = env.step(agent.act(obs, env))
-                n_steps += 1
+                action = agent.act(obs, env)
+                if action:
+                    obs, rew, done, _ = env.step(agent.act(obs, env))
+                    n_steps += 1
+                else:
+                    warnings.warn("An agent could not choose an action. Since the idle action is not supported, the episode is terminated with maximum number of steps.")
+                    done = True
+                    n_steps = self.max_steps
 
             lengths.append(n_steps)
 
