@@ -7,6 +7,8 @@ import heapq
 
 from typing import Tuple, List, Dict, Optional
 from envs.goal.env import GoalEnv, GoalStatus
+from agents.agent import Agent
+from matplotlib import animation
 
 
 # Type Aliases
@@ -507,3 +509,55 @@ class FindItemsVisualizator:
                 print(character, end=" ")
             print("#")
         print("# " * (width + 2))
+
+    @staticmethod
+    def pyplot_animate(observations):
+        if len(observations) == 0:
+            raise Exception("There must be at least one observation.")
+
+        # Grid information
+        grid      = observations[0][1]
+        num_items = grid.shape[0]
+        width     = grid.shape[1]
+        height    = grid.shape[2]
+        start_pos = observations[0][0]
+
+        # Plot the grid
+        fig, a = plt.subplots()
+        a.set_xlim((0, width))
+        a.set_ylim((0, height))
+        for x in range(width):
+            for y in range(height):
+                # Draw a grid cell
+                rect = plt.Rectangle((x, y), 1, 1, fill=False)
+                a.add_artist(rect)
+            
+                # Draw an item at the cell
+                items = grid[:, x, y]
+                if items.any():
+                    item = np.argmax(items)
+
+                    cmap = plt.cm.rainbow
+                    norm = plt_colors.Normalize(0, num_items)
+                    itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color=cmap(norm(item)))
+                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item))
+                    a.add_artist(itm)
+                    a.add_artist(txt)
+
+        # Plot the agent
+        agent_pos = (start_pos[0] + 0.5, start_pos[1] + 0.5)
+        agent = plt.Circle(agent_pos, radius=0.25, color="r")
+        a.add_artist(agent)
+
+        # Animate
+        def init():
+            agent.center = agent_pos
+            return agent
+
+        def animate(cur_frame: int):
+            cur_pos = observations[cur_frame][0]
+            agent.center = (cur_pos[0] + 0.5, cur_pos[1] + 0.5)
+            return agent
+
+        anim = animation.FuncAnimation(fig, animate, len(observations), init, interval=120)
+        plt.show()

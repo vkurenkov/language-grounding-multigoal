@@ -3,7 +3,7 @@ import sys
 import pickle
 
 from tensorboardX import SummaryWriter
-from envs.gridworld_simple.env import FindItemsEnv
+from envs.gridworld_simple.env import FindItemsEnv, FindItemsVisualizator
 from envs.definitions import GoalEnvironmentDefinition
 from agents.dqn import DQNEpsilonGreedyAgent
 from agents.perfect import PerfectAgent
@@ -32,8 +32,8 @@ parser.add_argument("--checkpoint-every", type=int, default=10000)
 args = parser.parse_args()
 
 # Define training process
-env_definition = GoalEnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=2,
-                                       instruction=[1], must_avoid_non_targets=True,
+env_definition = GoalEnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=3,
+                                       instruction=[0, 1, 2], must_avoid_non_targets=True,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
                                        #fixed_positions=[(0,0), (5, 5), (3, 3)],
                                        #fixed_look="EAST")
@@ -70,6 +70,17 @@ while not agent.train_is_done():
     if agent.train_num_steps() % args.checkpoint_every == 0:
         save_agent(agent, os.path.join(args.dir_checkpoints, agent.name() + "-{}.agent".format(agent.train_num_steps())))
 
+
 # Final benchmarking
 print("Mean benchmark trajectory length: {}".format(trajectory_length_benchmark(agent)))
 print("Mean success rate: {}".format(success_rate_benchmark(agent)))
+
+# Show how the agent is behaving
+env                  = env_definition.build_env()
+env.seed(1)
+obs, reward, done, _ = env.reset()
+observations         = [obs]
+while not done:
+    obs, reward, done, _ = env.step(agent.act(obs, env))
+    observations.append(obs)
+FindItemsVisualizator.pyplot_animate(observations)
