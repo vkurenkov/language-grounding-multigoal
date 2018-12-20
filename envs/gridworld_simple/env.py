@@ -6,6 +6,7 @@ import matplotlib.colors as plt_colors
 import heapq
 
 from typing import Tuple, List, Dict, Optional
+from envs.goal.env import GoalEnv, GoalStatus
 
 
 # Type Aliases
@@ -58,7 +59,7 @@ class Grid:
         return self._grid[:, x, y]
 
 
-class FindItemsEnv(gym.Env):
+class FindItemsEnv(GoalEnv):
     '''
     The agent is instructed to find given items on the grid.
     The agent must visit all of the specified items in the proper order.
@@ -274,6 +275,15 @@ class FindItemsEnv(gym.Env):
         """
         self._reset_instruction(msg)
 
+    def goal_status(self) -> GoalStatus:
+        for i in range(len(self._visited_items)):
+            if self._visited_items[i] != self._items_visit_order[i]:
+                return GoalStatus.FAILURE
+            if i >= (len(self._items_visit_order) - 1):
+                return GoalStatus.SUCCESS
+        
+        return GoalStatus.IN_PROGRESS
+
     def reset(self):
         '''
         output:
@@ -333,7 +343,6 @@ class FindItemsEnv(gym.Env):
         # First - calculate rewards, state, and so on
         output = self._gym_output()
 
-        # Then update list of visited items
         self._update_visited_items()
 
         return output

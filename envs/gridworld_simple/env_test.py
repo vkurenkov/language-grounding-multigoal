@@ -1,5 +1,6 @@
 import numpy as np
 from envs.gridworld_simple.env import FindItemsEnv, FindItemsVisualizator
+from envs.goal.env import GoalStatus
 
 # Seed 0; 3 objects
 # # # # # # # # # # # # 
@@ -260,3 +261,136 @@ def test_env_should_allow_agent_to_move_in_4_directions():
     assert agent_pos == (8, 8)
     
 
+def test_env_should_track_goal_status_when_not_avoiding_non_target_objects():
+    # Seed: 1; Instruction: [0, 1, 2]
+    # # # # # # # # # # # # 
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 0 - #
+    # - - - 1 - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 2 - #
+    # - - - - - - - - A - #
+    # # # # # # # # # # # # 
+    env = FindItemsEnv(10, 10, 3,
+            reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
+            instruction=[0, 1, 2],
+            must_avoid_non_targets=False)
+
+    # At the beginning
+    env.seed(1)
+    _, reward, *_ = env.reset()
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # After the first item
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # At the second item
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # At the third item
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_DOWN)
+    _, reward, done, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == 0 and done and env.goal_status() == GoalStatus.SUCCESS
+
+
+def test_env_should_track_goal_failure_when_avoiding_non_target_objects():
+    # Seed: 1; Instruction: [0, 1, 2]
+    # # # # # # # # # # # # 
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 0 - #
+    # - - - 1 - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 2 - #
+    # - - - - - - - - A - #
+    # # # # # # # # # # # # 
+    env = FindItemsEnv(10, 10, 3,
+            reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
+            instruction=[0, 1, 2],
+            must_avoid_non_targets=True)
+
+    # At the beginning
+    env.seed(1)
+    _, reward, *_ = env.reset()
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # Arrive at wrong object
+    _, _, done, *_ = env.step(env.ACTION_MOVE_UP)
+    assert done and env.goal_status() == GoalStatus.FAILURE
+
+
+def test_env_should_track_goal_success_when_avoiding_non_target_objects():
+    # Seed: 1; Instruction: [0, 1, 2]
+    # # # # # # # # # # # # 
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 0 - #
+    # - - - 1 - - - - - - #
+    # - - - - - - - - - - #
+    # - - - - - - - - 2 - #
+    # - - - - - - - - A - #
+    # # # # # # # # # # # # 
+    env = FindItemsEnv(10, 10, 3,
+            reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
+            instruction=[0, 1, 2],
+            must_avoid_non_targets=True)
+
+    # At the beginning
+    env.seed(1)
+    _, reward, *_ = env.reset()
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # After the first item
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    env.step(env.ACTION_MOVE_UP)
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # At the second item
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    env.step(env.ACTION_MOVE_LEFT)
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
+    # At the third item
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_RIGHT)
+    env.step(env.ACTION_MOVE_DOWN)
+    _, reward, done, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == 0 and done and env.goal_status() == GoalStatus.SUCCESS
