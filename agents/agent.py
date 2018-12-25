@@ -1,12 +1,25 @@
 import gym
-from typing import Optional, Dict
+
+from tensorboardX     import SummaryWriter
+from typing           import Optional, Dict, List
+from envs.definitions import Instruction
+from envs.definitions import InstructionEnvironmentDefinition
 
 
 class Agent:
-    def log_init(self, summary_writer) -> None:
+    """
+    - Discrete actions
+    - Stateful (may maintain state over time)
+    - Episodic
+    """
+
+    def log_init(self, summary_writer: SummaryWriter) -> None:
         self._log_writer = summary_writer
         
-    def train_init(self, env_definition) -> None:
+
+    def train_init(self, 
+            env_definition: InstructionEnvironmentDefinition, 
+            training_instructions: List[Instruction]) -> None:
         raise NotImplementedError()
 
     def train_step(self) -> None:
@@ -18,14 +31,23 @@ class Agent:
     def train_is_done(self) -> bool:
         raise NotImplementedError()
 
-    def act(self, observation, env: Optional[gym.Env] = None) -> Optional[int]:
+    
+    def reset(self) -> None:
+        """
+        Should reset to the initial state for an episode.
+        """
         raise NotImplementedError()
+
+    def act(self, observation, instruction: Instruction, env: Optional[gym.Env] = None) -> Optional[int]:
+        raise NotImplementedError()
+
 
     def parameters(self) -> Dict:
         raise NotImplementedError()
 
     def name(self) -> str:
         raise NotImplementedError()
+
 
     def __getstate__(self):
         '''

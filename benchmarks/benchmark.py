@@ -32,6 +32,7 @@ class SuccessRateBenchmark(Benchmark):
 
             n_success = 0
             for i in range(self.n_trials_per_instruction):
+                agent.reset()
                 obs, rew, done, _ = env.reset()
                 while not done:
                     action = agent.act(obs, env)
@@ -68,6 +69,7 @@ class SuccessTrajectoryLengthBenchmark(Benchmark):
 
             lengths = []
             for i in range(self.n_trials_per_instruction):
+                agent.reset()
                 obs, rew, done, _ = env.reset()
                 n_steps = 0
                 while not done and env.goal_status() == GoalStatus.IN_PROGRESS:

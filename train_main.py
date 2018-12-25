@@ -84,6 +84,7 @@ print("Mean success rate: {}".format(success_rate_benchmark(agent, training_inst
 env                  = env_definition.build_env(training_instructions[0])
 obs, reward, done, _ = env.reset()
 observations         = [obs]
+agent.reset()
 while not done:
     obs, reward, done, _ = env.step(agent.act(obs, env))
     observations.append(obs)

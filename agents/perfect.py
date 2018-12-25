@@ -21,6 +21,12 @@ class PerfectAgent(Agent):
     def train_is_done(self) -> bool:
         return True
 
+    def reset(self) -> None:
+        """
+        Nothing to reset here.
+        """
+        pass
+
     def act(self, observation, env: Optional[FindItemsEnv]) -> Optional[int]:
         if not env:
             raise Exception("Cannot act without inforation about an environment.")
