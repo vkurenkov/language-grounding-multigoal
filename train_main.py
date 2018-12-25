@@ -4,7 +4,7 @@ import pickle
 
 from tensorboardX import SummaryWriter
 from envs.gridworld_simple.env import FindItemsEnv, FindItemsVisualizator
-from envs.definitions import GoalEnvironmentDefinition
+from envs.definitions import InstructionEnvironmentDefinition
 from agents.dqn import DQNEpsilonGreedyAgent
 from agents.perfect import PerfectAgent
 from benchmarks.benchmark import SuccessTrajectoryLengthBenchmark, SuccessRateBenchmark
@@ -32,11 +32,12 @@ parser.add_argument("--checkpoint-every", type=int, default=10000)
 args = parser.parse_args()
 
 # Define training process
-env_definition = GoalEnvironmentDefinition(FindItemsEnv, width=10, height=10, num_items=3,
-                                       instruction=[0, 1, 2], must_avoid_non_targets=True,
+env_definition        = InstructionEnvironmentDefinition(
+                                       FindItemsEnv, width=10, height=10,
+                                       num_items=3, must_avoid_non_targets=True,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
-                                       #fixed_positions=[(0,0), (5, 5), (3, 3)],
-                                       #fixed_look="EAST")
+training_instructions = [[0, 1], [1, 0], [2, 1]]
+
 
 # Define an agent
 if args.agent == AGENT_DQN:
@@ -48,10 +49,10 @@ writer = SummaryWriter(os.path.join(args.dir_tensorboard, env_definition.name(),
 
 # Define benchmarks
 trajectory_length_benchmark = SuccessTrajectoryLengthBenchmark(
-    env_definition, n_trials=args.benchmark_trials
+    env_definition, n_trials_per_instruction=args.benchmark_trials
 )
 success_rate_benchmark      = SuccessRateBenchmark(
-    env_definition, n_trials=args.benchmark_trials
+    env_definition, n_trials_per_instruction=args.benchmark_trials
 )
 
 agent.log_init(writer)
@@ -72,11 +73,11 @@ while not agent.train_is_done():
 
 
 # Final benchmarking
-print("Mean benchmark trajectory length: {}".format(trajectory_length_benchmark(agent)))
-print("Mean success rate: {}".format(success_rate_benchmark(agent)))
+print("Mean benchmark trajectory length: {}".format(trajectory_length_benchmark(agent, training_instructions)))
+print("Mean success rate: {}".format(success_rate_benchmark(agent, training_instructions)))
 
 # Show how the agent is behaving
-env                  = env_definition.build_env()
+env                  = env_definition.build_env(training_instructions[0])
 env.seed(1)
 obs, reward, done, _ = env.reset()
 observations         = [obs]

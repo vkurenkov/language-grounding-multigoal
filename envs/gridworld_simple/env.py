@@ -358,7 +358,6 @@ class FindItemsEnv(GoalEnv):
             placement = "fixed_" + positions + "_" + str(self._fixed_look)
 
         grid = "grid_" + str(self._grid._width) + "_" + str(self._grid._height) + "_" + str(self._num_items)
-        instruction = "instr_" + "_".join([str(item) for item in self.instruction])
 
         rew_type = "rew_unknown"
         if self._reward_type == self.REWARD_TYPE_MIN_ACTIONS:
@@ -368,7 +367,7 @@ class FindItemsEnv(GoalEnv):
         elif self._reward_type == self.REWARD_TYPE_LAST_ITEM:
             rew_type = "rew_last_item"
 
-        return "/".join(["gridworld", str(obs_type), str(placement), str(grid), str(instruction), str(rew_type)])
+        return "/".join(["gridworld", str(obs_type), str(placement), str(grid), str(rew_type)])
 
 
 class FindItemsEnvShortestPaths:
