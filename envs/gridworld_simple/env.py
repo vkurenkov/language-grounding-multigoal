@@ -418,10 +418,7 @@ class FindItemsEnvShortestPaths:
                 if alt_distance < from_pos_distance[neighbor]:
                     from_pos_distance[neighbor] = alt_distance
                     previous_vertex[neighbor]   = cur_vertex
-
-                    if neighbor not in seen_vertices:
-                        heapq.heappush(work_vertices, (neighbor, alt_distance))
-                        seen_vertices.add(neighbor)
+                    heapq.heappush(work_vertices, (neighbor, alt_distance))
 
         # Collect shortest paths for every item
         paths = {}
