@@ -2,13 +2,15 @@ import os
 import sys
 import pickle
 
-from tensorboardX import SummaryWriter
+from argparse                  import ArgumentParser
+from tensorboardX              import SummaryWriter
 from envs.gridworld_simple.env import FindItemsEnv, FindItemsVisualizator
-from envs.definitions import InstructionEnvironmentDefinition
-from agents.dqn import DQNEpsilonGreedyAgent
-from agents.perfect import PerfectAgent
-from benchmarks.benchmark import SuccessTrajectoryLengthBenchmark, SuccessRateBenchmark
-from argparse import ArgumentParser
+from envs.definitions          import InstructionEnvironmentDefinition
+from agents.dqn                import DQNEpsilonGreedyAgent
+from agents.perfect            import PerfectAgent
+from benchmarks.benchmark      import SuccessTrajectoryLengthBenchmark
+from benchmarks.benchmark      import SuccessRateBenchmark
+from utils.training            import fix_random_seeds
 
 
 AGENT_PERFECT = "perfect"
@@ -23,15 +25,17 @@ def save_agent(agent, path):
 
 # Command line interface
 parser = ArgumentParser()
-parser.add_argument("--agent", type=str, default=AGENT_PERFECT)
-parser.add_argument("--dir-tensorboard", type=str, default=".tensorboard")
-parser.add_argument("--dir-checkpoints", type=str, default=".checkpoints")
+parser.add_argument("--agent",            type=str, default=AGENT_PERFECT)
+parser.add_argument("--dir-tensorboard",  type=str, default=".tensorboard")
+parser.add_argument("--dir-checkpoints",  type=str, default=".checkpoints")
 parser.add_argument("--benchmark-trials", type=int, default=10)
-parser.add_argument("--benchmark-every", type=int, default=10000)
+parser.add_argument("--benchmark-every",  type=int, default=10000)
 parser.add_argument("--checkpoint-every", type=int, default=10000)
+parser.add_argument("--seed",             type=int, default=0)
 args = parser.parse_args()
 
 # Define training process
+fix_random_seeds(args.seed)
 env_definition        = InstructionEnvironmentDefinition(
                                        FindItemsEnv, width=10, height=10,
                                        num_items=3, must_avoid_non_targets=True,
@@ -78,7 +82,6 @@ print("Mean success rate: {}".format(success_rate_benchmark(agent, training_inst
 
 # Show how the agent is behaving
 env                  = env_definition.build_env(training_instructions[0])
-env.seed(1)
 obs, reward, done, _ = env.reset()
 observations         = [obs]
 while not done:
