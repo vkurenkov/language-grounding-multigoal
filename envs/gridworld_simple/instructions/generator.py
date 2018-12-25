@@ -92,13 +92,24 @@ def conjunction_from_state(state):
     return str.strip(state.format(""))
 
 
+def extract_level1_instructions(instructions):
+    def is_the_same_order(instruction):
+        return instruction["objects_real_order"] == instruction["objects_text_order"]
+
+    return list(filter(is_the_same_order, instructions))
+
+
 if __name__ == "__main__":
-    instructions = generate_compound_instructions(name_mapping, max_instruction_length=3)
+    instructions         = generate_compound_instructions(name_mapping, max_instruction_length=3)
+    instructions_level1  = extract_level1_instructions(instructions)
+    instructions_dataset = {
+        "conjunctions": [conjunction_from_state(state) for state in states.values()],
+        "name_ids": name_mapping,
+    }
+
     with open("instructions.json", mode="w", encoding="utf-8") as f:
-        # Save instructions
-        instructions_dataset = {
-            "conjunctions": [conjunction_from_state(state) for state in states.values()],
-            "name_ids": name_mapping,
-            "instructions": instructions
-        }
+        instructions_dataset["instructions"] = instructions
+        json.dump(instructions_dataset, f, indent=4, separators=(",", ":"))
+    with open("instructions-level1.json", mode="w", encoding="utf-8") as f:
+        instructions_dataset["instructions"] = instructions_level1
         json.dump(instructions_dataset, f, indent=4, separators=(",", ":"))

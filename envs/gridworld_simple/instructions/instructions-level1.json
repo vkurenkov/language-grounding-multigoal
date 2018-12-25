@@ -1,0 +1,971 @@
+{
+    "instructions":[
+        {
+            "raw":"Go to the green",
+            "conjunctions":[
+                "Go to the"
+            ],
+            "objects_text_order":[
+                2
+            ],
+            "objects_real_order":[
+                2
+            ]
+        },
+        {
+            "raw":"Go to the red",
+            "conjunctions":[
+                "Go to the"
+            ],
+            "objects_text_order":[
+                0
+            ],
+            "objects_real_order":[
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue",
+            "conjunctions":[
+                "Go to the"
+            ],
+            "objects_text_order":[
+                1
+            ],
+            "objects_real_order":[
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green and then go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the green and then go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red and then go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the red and then go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the blue and then go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue and then go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the green and then go to the red and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green and then go to the blue and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the red and then go to the green and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red and then go to the blue and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue and then go to the green and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue and then go to the red and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and then go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the green and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the green and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the red and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the blue and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the green and after that go to the red and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green and after that go to the blue and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the red and after that go to the green and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red and after that go to the blue and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue and after that go to the green and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue and after that go to the red and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the green and after that go to the red and then go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green and after that go to the blue and then go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the red and after that go to the green and then go to the blue",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red and after that go to the blue and then go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue and after that go to the green and then go to the red",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue and after that go to the red and then go to the green",
+            "conjunctions":[
+                "Go to the",
+                "and after that go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the red and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the blue and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the green and after that go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the blue and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the green and after that go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the red and after that go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and after that go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the red and then go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the blue and then go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the green and then go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the blue and then go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the green and then go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the red and then go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                "and then go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                0,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the red, go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                2,
+                0,
+                1
+            ],
+            "objects_real_order":[
+                2,
+                0,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the green, go to the blue, go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                2,
+                1,
+                0
+            ],
+            "objects_real_order":[
+                2,
+                1,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the green, go to the blue",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                0,
+                2,
+                1
+            ],
+            "objects_real_order":[
+                0,
+                2,
+                1
+            ]
+        },
+        {
+            "raw":"Go to the red, go to the blue, go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                0,
+                1,
+                2
+            ],
+            "objects_real_order":[
+                0,
+                1,
+                2
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the green, go to the red",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                1,
+                2,
+                0
+            ],
+            "objects_real_order":[
+                1,
+                2,
+                0
+            ]
+        },
+        {
+            "raw":"Go to the blue, go to the red, go to the green",
+            "conjunctions":[
+                "Go to the",
+                ", go to the",
+                ", go to the"
+            ],
+            "objects_text_order":[
+                1,
+                0,
+                2
+            ],
+            "objects_real_order":[
+                1,
+                0,
+                2
+            ]
+        }
+    ],
+    "conjunctions":[
+        "and after that go to the",
+        "but before go to the",
+        "Go to the",
+        ", go to the",
+        "and then go to the",
+        "but first go to the"
+    ],
+    "name_ids":{
+        "green":2,
+        "red":0,
+        "blue":1
+    }
+}
