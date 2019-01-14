@@ -5,16 +5,27 @@ import pickle
 from argparse                  import ArgumentParser
 from tensorboardX              import SummaryWriter
 from envs.gridworld_simple.env import FindItemsEnv, FindItemsVisualizator
+from envs.gridworld_simple.env import FindItemsEnvObsOnlyGrid
 from envs.definitions          import InstructionEnvironmentDefinition
-from agents.dqn                import DQNEpsilonGreedyAgent
 from agents.perfect            import PerfectAgent
+from agents.chaplot.agent      import GatedAttentionAgent
 from benchmarks.benchmark      import SuccessTrajectoryLengthBenchmark
 from benchmarks.benchmark      import SuccessRateBenchmark
 from utils.training            import fix_random_seeds
 
+from envs.gridworld_simple.instructions.tokenizer import InstructionTokenizer
 
-AGENT_PERFECT = "perfect"
-AGENT_DQN     = "dqn"
+
+import sys
+import warnings
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
+
+AGENT_PERFECT          = "perfect"
+AGENT_GATED_ATTENTTION = "a3c_lstm_gated_attention" # Chaplot et al.
+AGENT_A3C_LSTM         = "a3c_lstm"                 # Misra et al.
 
 
 def save_agent(agent, path):
@@ -25,7 +36,7 @@ def save_agent(agent, path):
 
 # Command line interface
 parser = ArgumentParser()
-parser.add_argument("--agent",            type=str, default=AGENT_PERFECT)
+parser.add_argument("--agent",            type=str, default=AGENT_GATED_ATTENTTION)
 parser.add_argument("--dir-tensorboard",  type=str, default=".tensorboard")
 parser.add_argument("--dir-checkpoints",  type=str, default=".checkpoints")
 parser.add_argument("--benchmark-trials", type=int, default=10)
@@ -34,20 +45,31 @@ parser.add_argument("--checkpoint-every", type=int, default=10000)
 parser.add_argument("--seed",             type=int, default=0)
 args = parser.parse_args()
 
-# Define training process
+# Reproducibility
 fix_random_seeds(args.seed)
-env_definition        = InstructionEnvironmentDefinition(
-                                       FindItemsEnv, width=10, height=10,
+
+# Training instructions
+training_instructions = [("Go to the green", [0]), ("Go to the red", [1]), ("Go to the blue", [2])]
+instruction_tokenizer = InstructionTokenizer([instr[0] for instr in training_instructions])
+
+# Agents and Environments
+# Different agents need different information.
+if args.agent == AGENT_GATED_ATTENTTION:
+    agent    = GatedAttentionAgent(instruction_tokenizer)
+    env_type = FindItemsEnvObsOnlyGrid
+elif args.agent == AGENT_PERFECT:
+    # Since the perfect agent should know everything, we provided it with the full information.
+    # (such as the coordinates of the agent's position)
+    agent    = PerfectAgent()
+    env_type = FindItemsEnv
+else:
+    raise NotImplementedError("There is no such agent.")
+
+
+env_definition = InstructionEnvironmentDefinition(
+                                       env_type, width=10, height=10,
                                        num_items=3, must_avoid_non_targets=True,
                                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM)
-training_instructions = [[0, 1], [1, 0], [2, 1]]
-
-
-# Define an agent
-if args.agent == AGENT_DQN:
-    agent = DQNEpsilonGreedyAgent(max_frames=50000000,eps_frames=25000000,gamma=0.90,batch_size=2048,learning_rate=1e-3)
-else:
-    agent = PerfectAgent()
 
 writer = SummaryWriter(os.path.join(args.dir_tensorboard, env_definition.name(), agent.name()))
 
@@ -60,7 +82,7 @@ success_rate_benchmark      = SuccessRateBenchmark(
 )
 
 agent.log_init(writer)
-agent.train_init(env_definition)
+agent.train_init(env_definition, training_instructions)
 while not agent.train_is_done():
     agent.train_step()
 
