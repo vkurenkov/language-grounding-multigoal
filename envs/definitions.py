@@ -1,8 +1,10 @@
 from typing import List
+from typing import Tuple
 
 
 # Type aliases
-Instruction = List[int]
+Instruction                = List[int]
+NaturalLanguageInstruction = Tuple[str, Instruction]
 
 
 class InstructionEnvironmentDefinition:

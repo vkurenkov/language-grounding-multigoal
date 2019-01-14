@@ -25,7 +25,7 @@ class Grid:
         self._num_items = num_items
         self._width = width
         self._height = height
-        self._grid = np.zeros(shape=(num_items, width, height))
+        self._grid = np.zeros(shape=(num_items, width, height), dtype=np.float32)
 
     def _check_grid_range(self, x, y):
         if not self.is_within_the_grid(x, y):
@@ -84,10 +84,10 @@ class FindItemsEnv(GoalEnv):
         - The agent's current position (not included in the grid)
     '''
 
-    ACTION_MOVE_UP = 1
-    ACTION_MOVE_DOWN = 2
-    ACTION_MOVE_LEFT = 3
-    ACTION_MOVE_RIGHT = 4
+    ACTION_MOVE_UP = 0
+    ACTION_MOVE_DOWN = 1
+    ACTION_MOVE_LEFT = 2
+    ACTION_MOVE_RIGHT = 3
 
     NO_OBJECT = -1
 
@@ -325,6 +325,7 @@ class FindItemsEnv(GoalEnv):
             observation - an observation after the action, tuple (agent_pos, grid)
             reward - a scalar reward after the action was done
             done - whether the mission is terminated (successful or not)
+            info - defaults to None
         '''
         agent_pos = self._agent_pos
         pos_to_move = None
@@ -368,6 +369,32 @@ class FindItemsEnv(GoalEnv):
             rew_type = "rew_last_item"
 
         return "/".join(["gridworld", str(obs_type), str(placement), str(grid), str(rew_type)])
+
+
+class FindItemsEnvObsOnlyGrid(FindItemsEnv):
+    def step(self, action):
+        '''
+        input:
+            action: 0 - Move Up; 1 - Move Down; 2 - Move Left; 3 - Move Right;
+        output:
+            observation - an observation after the action, grid
+            reward - a scalar reward after the action was done
+            done - whether the mission is terminated (successful or not)
+            info - defaults to None
+        '''
+        obs, reward, done, info = super().step(action)
+        return obs[1], reward, done, info
+
+    def reset(self):
+        '''
+        output:
+            observation - an observation after the action, grid
+            reward - a scalar reward after the action was done
+            done - whether the mission is terminated (successful or not)
+            info - defaults to None
+        '''
+        obs, reward, done, info = super().reset()
+        return obs[1], reward, done, info
 
 
 class FindItemsEnvShortestPaths:
