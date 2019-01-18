@@ -4,6 +4,7 @@ import torch
 import gym
 import os
 import json
+import copy
 
 import torch.optim            as optim
 import torch.nn               as nn
@@ -82,6 +83,9 @@ def train(
     total_episodes  = 0
 
     while total_episodes < max_episodes:
+        # Holt while testing is performed
+        is_testing_iteration_running.wait()
+
         # Sync with the shared model
         model.load_state_dict(shared_model.state_dict())
 
@@ -90,6 +94,8 @@ def train(
             episode_rewards = []
             cx = torch.zeros(1, 256, requires_grad=True)
             hx = torch.zeros(1, 256, requires_grad=True)
+
+            episodes_completion.put(1)
         else:
             cx = cx.clone().detach().requires_grad_(True)
             hx = hx.clone().detach().requires_grad_(True)
@@ -190,7 +196,7 @@ def test(
     env_definition:  InstructionEnvironmentDefinition,
     instructions:    List[NaturalLanguageInstruction],
     tokenizer:       InstructionTokenizer,
-    model:           A3C_LSTM_GA,
+    shared_model:    A3C_LSTM_GA,
     logdir:          str,
     test_every:      int,
     test_repeat:     int,
@@ -198,10 +204,16 @@ def test(
     max_episode_len: int,
     seed:            int):
     
+    # Allow training agents to work
+    is_testing_iteration_running.set()
+
     # Test must be reproducible
     fix_random_seeds(seed)
 
     logger = SummaryWriter(logdir)
+
+    model               = copy.deepcopy(shared_model)
+    best_model_traj_len = -np.inf 
 
     waited_episodes = 0
     while waited_episodes <= max_episodes:
@@ -211,6 +223,12 @@ def test(
         total_successes = []
         total_lengths   = []
         if waited_episodes % test_every == 0:
+            # Training agents must wait until the testing is over
+            is_testing_iteration_running.clear()
+
+            # Synchronize models
+            model.load_state_dict(shared_model.state_dict())
+
             # Test every instruction
             for instruction in instructions:
                 instruction_raw   = instruction[0]
@@ -257,12 +275,16 @@ def test(
                     instruction_lengths.append(num_steps)
                     total_lengths.append(num_steps)
 
-                logger.add_scalar("Test/MeanTrajectoryLen/{}".format(instruction_raw), np.mean(instruction_lengths), waited_episodes)
-                logger.add_scalar("Test/MeanSuccessRate/{}".format(instruction_raw), np.mean(instruction_successes), waited_episodes)
+                logger.add_scalar("TestTrajectoryLenMean/{}".format(instruction_raw), np.mean(instruction_lengths), waited_episodes)
+                logger.add_scalar("TestSuccessRateMean/{}".format(instruction_raw), np.mean(instruction_successes), waited_episodes)
 
-            logger.add_scalar("Test/MeanTrajectoryLen", np.mean(total_lengths), waited_episodes)
-            logger.add_scalar("Test/MeanSuccessRate", np.mean(total_successes), waited_episodes)
+            logger.add_scalar("TestTrajectoryLenMean", np.mean(total_lengths), waited_episodes)
+            logger.add_scalar("TestSuccessRateMean", np.mean(total_successes), waited_episodes)
                 
+            if np.mean(total_lengths) > best_model_traj_len:
+                torch.save(model, os.path.join(logdir, "best.model"))
+
+            is_testing_iteration_running.set()
 
 
 def get_level1_instructions() -> List[NaturalLanguageInstruction]:
@@ -325,11 +347,12 @@ experiment_folder = create_experiment_folder(
 )
 
 # Testing
-episodes_completion = mp.Queue()
+episodes_completion          = mp.Queue()
+is_testing_iteration_running = mp.Event()
 
 testing_parameters = {
     "test_every":  100,
-    "test_repeat": 10,
+    "test_repeat": 5,
     "seed":        1337
 }
 test_args = (

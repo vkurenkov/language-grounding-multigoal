@@ -7,7 +7,6 @@ import heapq
 
 from typing import Tuple, List, Dict, Optional
 from envs.goal.env import GoalEnv, GoalStatus
-from agents.agent import Agent
 from matplotlib import animation
 
 

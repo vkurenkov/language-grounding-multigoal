@@ -2,6 +2,7 @@ import torch
 import numpy
 import random
 import os
+import shutil
 
 
 def fix_random_seeds(seed: int) -> None:
@@ -22,7 +23,7 @@ def create_experiment_folder(root_path: str, env_name: str, agent_name: str) -> 
         print("This experiment already exists. Do you want to proceed (erase the old one)? (y/n)")
         answer = input()
         if answer == "y":
-            os.rmdir(experiment_path)
+            shutil.rmtree(experiment_path, ignore_errors=True)
         else:
             # Stop the experiment
             exit(0)
