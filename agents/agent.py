@@ -2,7 +2,7 @@ import gym
 
 from tensorboardX     import SummaryWriter
 from typing           import Optional, Dict, List
-from envs.definitions import Instruction
+from envs.definitions import NaturalLanguageInstruction
 from envs.definitions import InstructionEnvironmentDefinition
 
 
@@ -19,7 +19,7 @@ class Agent:
 
     def train_init(self, 
             env_definition: InstructionEnvironmentDefinition, 
-            training_instructions: List[Instruction]) -> None:
+            training_instructions: List[NaturalLanguageInstruction]) -> None:
         raise NotImplementedError()
 
     def train_step(self) -> None:
@@ -38,7 +38,7 @@ class Agent:
         """
         raise NotImplementedError()
 
-    def act(self, observation, instruction: Instruction, env: Optional[gym.Env] = None) -> Optional[int]:
+    def act(self, observation, instruction: NaturalLanguageInstruction, env: Optional[gym.Env] = None) -> Optional[int]:
         raise NotImplementedError()
 
 

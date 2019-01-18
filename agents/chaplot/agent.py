@@ -45,7 +45,8 @@ def train(
     learning_rate:       int,
     gamma:               int,
     tau:                 int,
-    num_bootstrap_steps: int):
+    num_bootstrap_steps: int,
+    max_episodes:        int):
 
     # Agents should start from different seeds
     # Otherwise it will lead to the same experience (not desirable at all)
@@ -75,7 +76,7 @@ def train(
     total_steps     = 0
     total_episodes  = 0
 
-    while True:
+    while total_episodes < max_episodes:
         # Sync with the shared model
         model.load_state_dict(shared_model.state_dict())
 
@@ -142,28 +143,32 @@ def train(
         value_loss = 0
         R = torch.tensor(R)
 
-        gae = torch.zeros(1, 1)
+        # gae = torch.zeros(1, 1)
+        rollout_entropy = 0.0
         for i in reversed(range(len(rewards))):
             R = gamma * R + rewards[i]
             advantage = R - values[i]
-            value_loss = value_loss + 0.5 * advantage.pow(2)
+            value_loss = value_loss + advantage.pow(2)
 
             # Generalized Advantage Estimation
-            delta_t = rewards[i] + gamma * \
-                values[i + 1].data - values[i].data
-            gae = gae * gamma * tau + delta_t
+            # delta_t = rewards[i] + gamma * \
+            #     values[i + 1].data - values[i].data
+            # gae = gae * gamma * tau + delta_t
 
-            policy_loss = policy_loss - \
-                log_probs[i] * torch.tensor(gae) - 0.01 * entropies[i]
+            policy_loss = policy_loss - log_probs[i] * torch.tensor(advantage) - 0.01 * entropies[i]
+            rollout_entropy += entropies[i].data[0]
+
+        rollout_entropy /= len(rewards)
+        value_loss      /= len(rewards)
 
         optimizer.zero_grad()
 
-        logger.add_scalar("Rollout/GAE Reward", gae.data[0, 0], total_steps)
+        #logger.add_scalar("Rollout/GAE Reward", gae.data[0, 0], total_steps)
+        logger.add_scalar("Rollout/Mean Entropy", rollout_entropy, total_steps)
         logger.add_scalar("Rollout/Policy loss", policy_loss.data[0, 0], total_steps)
         logger.add_scalar("Rollout/Value loss", value_loss.data[0, 0], total_steps)
         logger.add_scalar("Rollout/Total loss", policy_loss.data[0, 0] + 0.5 * value_loss.data[0, 0], total_steps)
 
-        print(total_steps)
         (policy_loss + 0.5 * value_loss).backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 40)
 
@@ -171,6 +176,7 @@ def train(
         optimizer.step()
 
         if done:
+            print("Agent #{}. Seen episodes/frames: {}; {}".format(logdir[-1], total_episodes, total_steps))
             logger.add_scalar("Episode/Reward (sum)", np.sum(episode_rewards), total_episodes)
             logger.add_scalar("Episode/Length", episode_length, total_episodes)
             total_episodes += 1
@@ -178,9 +184,9 @@ def train(
 
 class GatedAttentionAgent(Agent):
     def __init__(self, instruction_tokenizer: InstructionTokenizer,
-                       gamma=0.99, tau=1.00, num_bootstrap_steps=20,
-                       learning_rate=0.001, num_processes=4, max_episode_len=100,
-                       seed=0):
+                       gamma=0.95, tau=0.00, num_bootstrap_steps=50,
+                       learning_rate=0.001, num_processes=4, max_episode_len=50,
+                       seed=0, max_episodes=150000):
         super(Agent, self).__init__()
 
         self._gamma                 = gamma
@@ -191,15 +197,16 @@ class GatedAttentionAgent(Agent):
         self._seed                  = seed
         self._max_episode_len       = max_episode_len
         self._instruction_tokenizer = instruction_tokenizer
+        self._max_episodes          = max_episodes
 
     def train_init(self, 
         env_definition: InstructionEnvironmentDefinition, 
         training_instructions: List[NaturalLanguageInstruction]) -> None:
 
-        shared_model = A3C_LSTM_GA(
+        self._shared_model = A3C_LSTM_GA(
                             self._instruction_tokenizer.get_vocabulary_size(),
                             self._max_episode_len)
-        shared_model.share_memory()
+        self._shared_model.share_memory()
 
         # train(
         #     env_definition,
@@ -222,17 +229,18 @@ class GatedAttentionAgent(Agent):
         for rank in range(0, self._num_processes):
             args = (
                 env_definition,
-                shared_model,
+                self._shared_model,
                 training_instructions,
                 self._instruction_tokenizer,
                 self._log_writer.log_dir + "/agent_{}".format(rank),
-                self._seed,
+                self._seed + rank,
                 self._instruction_tokenizer.get_vocabulary_size(),
                 self._max_episode_len,
                 self._learning_rate,
                 self._gamma,
                 self._tau,
-                self._num_bootstrap_steps
+                self._num_bootstrap_steps,
+                self._max_episodes
             )
 
             p = mp.Process(target=train, args=args)
@@ -255,10 +263,30 @@ class GatedAttentionAgent(Agent):
         """
         Should reset to the initial state for an episode.
         """
-        raise NotImplementedError()
+        self._cx           = torch.zeros(1, 256)
+        self._hx           = torch.zeros(1, 256)
+        self._my_timesteps = 0
 
-    def act(self, observation, instruction: Instruction, env: Optional[gym.Env] = None) -> Optional[int]:
-        raise NotImplementedError()
+    def act(self, observation, instruction: NaturalLanguageInstruction, env: Optional[gym.Env] = None) -> Optional[int]:
+        observation     = torch.from_numpy(observation).float()/255.0
+        instruction_idx = self._instruction_tokenizer.text_to_ids(instruction[0])
+        instruction_idx = np.array(instruction_idx)
+        instruction_idx = torch.from_numpy(instruction_idx).view(1, -1)
+
+        with torch.no_grad():
+            tx = torch.tensor(np.array([self._my_timesteps]), dtype=torch.int64)
+            _, logit, (self._hx, self._cx) = self._shared_model((
+                                                    torch.tensor(observation).unsqueeze(0),
+                                                    torch.tensor(instruction_idx),
+                                                    (tx, self._hx, self._cx)
+                                                ))
+            prob   = F.softmax(logit, dim=-1)
+            action = prob.multinomial(1).data
+            action = action.numpy()[0, 0]
+
+        self._my_timesteps += 1
+
+        return action
 
     def parameters(self) -> Dict:
         return {
@@ -266,10 +294,12 @@ class GatedAttentionAgent(Agent):
             "gamma": self._gamma,
             "num_bootstrap_steps": self._num_bootstrap_steps,
             "num_processes": self._num_processes,
+            "max_episodes": self._max_episodes,
+            "max_episode_len": self._max_episode_len,
             "seed": self._seed
         }
 
     def name(self) -> str:
-        return "gated-attention-a3c-lstm-seed_{}-num_proc_{}-num_steps_{}-tau_{}-gamma_{}" \
-                .format(self._seed, self._num_processes, self._num_bootstrap_steps,
-                        self._tau, self._gamma)
+        return "gated-attention-a3c-lstm-seed_{}-max_episodes_{}-num_proc_{}-num_steps_{}-tau_{}-gamma_{}" \
+                .format(self._seed, self._max_episodes, self._num_processes,
+                        self._num_bootstrap_steps, self._tau, self._gamma)

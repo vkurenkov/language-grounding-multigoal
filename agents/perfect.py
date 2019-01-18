@@ -1,15 +1,19 @@
 import warnings
 
-from typing import Optional, Dict
-from agents.agent import Agent
+from typing                    import Optional, Dict, List
+from agents.agent              import Agent
 from envs.gridworld_simple.env import FindItemsEnv
+from envs.definitions          import NaturalLanguageInstruction
+from envs.definitions          import InstructionEnvironmentDefinition
 
 
 class PerfectAgent(Agent):
     def log_init(self, summary_writer) -> None:
         pass
 
-    def train_init(self, env_definition) -> None:
+    def train_init(self, 
+            env_definition: InstructionEnvironmentDefinition, 
+            training_instructions: List[NaturalLanguageInstruction]) -> None:
         pass
 
     def train_step(self) -> None:
@@ -27,9 +31,9 @@ class PerfectAgent(Agent):
         """
         pass
 
-    def act(self, observation, env: Optional[FindItemsEnv]) -> Optional[int]:
+    def act(self, observation, instruction: NaturalLanguageInstruction, env: Optional[FindItemsEnv]) -> Optional[int]:
         if not env:
-            raise Exception("Cannot act without inforation about an environment.")
+            raise Exception("Cannot act without information about an environment.")
 
         agent_pos, *_ = observation
         path = env._shortest_paths.get_path(agent_pos, env._cur_target_item())
