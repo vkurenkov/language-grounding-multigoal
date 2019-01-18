@@ -356,7 +356,7 @@ class FindItemsEnv(GoalEnv):
             placement = "randomized"
         else:
             positions = "_".join(["(" + str(x) + "_" + str(y) + ")" for (x, y) in self._fixed_positions])
-            placement = "fixed_" + positions + "_" + str(self._fixed_look)
+            placement = "fixed_" + positions
 
         grid = "grid_" + str(self._grid._width) + "_" + str(self._grid._height) + "_" + str(self._num_items)
 
