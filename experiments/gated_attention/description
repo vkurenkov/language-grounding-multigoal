@@ -1,0 +1,15 @@
+The original code for the agent can be found here: 
+https://github.com/devendrachaplot/DeepRL-Grounding
+
+
+-- WHAT ABOUT CONVOLUTIONS? --
+Indeed, we should change the architecture for convolutions.
+Either reduce size of the filters or change convolutions to fully connected layers.
+(Only applies to the grid world problem).
+
+-- WHAT ABOUT CURRICULUM? --
+# Train based on all instructions without curriculum (randomly sampling)
+# Train based on the curriculum
+    # One object only
+    # Two objects only
+    # Three objects only
