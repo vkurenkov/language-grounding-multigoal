@@ -16,8 +16,8 @@ def fix_random_seeds(seed: int) -> None:
     numpy.random.seed(seed)
     random.seed(seed)
 
-def create_experiment_folder(root_path: str, env_name: str, agent_name: str) -> str:
-    experiment_path = os.path.join(root_path, env_name, agent_name)
+def create_experiment_folder(root_path: str, instructions_level, env_name: str, agent_name: str) -> str:
+    experiment_path = os.path.join(root_path, instructions_level, env_name, agent_name)
 
     if os.path.isdir(experiment_path):
         print("This experiment already exists. Do you want to proceed (erase the old one)? (y/n)")

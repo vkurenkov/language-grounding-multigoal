@@ -33,7 +33,7 @@ class A3C_LSTM_GA(nn.Module):
         super(A3C_LSTM_GA, self).__init__()
 
         # Image Processing
-        self.img1 = nn.Linear(300, 128)
+        self.img1 = nn.Linear(400, 128)
         self.img2 = nn.Linear(128, 128)
         self.img3 = nn.Linear(128, 128)
 

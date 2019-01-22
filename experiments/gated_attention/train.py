@@ -28,6 +28,12 @@ from typing                                        import Optional, Dict
 from tensorboardX                                  import SummaryWriter
 
 
+TEST_MODE_STOCHASTIC      = "Stochastic"
+TEST_MODE_DETERMINISTIC   = "Determenistic"
+
+INSTRUCTIONS_LEVEL0 = "level0"
+INSTRUCTIONS_LEVEL1 = "level1"
+
 
 def ensure_shared_grads(model: nn.Module, shared_model: nn.Module):
     for param, shared_param in zip(model.parameters(),
@@ -128,6 +134,9 @@ def train(
             done = done or episode_length >= max_episode_len
 
             if done:
+                instruction     = sample_instruction(instructions)
+                env             = env_definition.build_env(instruction[1])
+
                 observation, _, _, _ = env.reset()
                 observation          = torch.from_numpy(observation).float()/255.0
                 instruction_idx      = tokenizer.text_to_ids(instruction[0])
@@ -202,6 +211,7 @@ def test(
     test_repeat:     int,
     max_episodes:    int,
     max_episode_len: int,
+    mode:            str,
     seed:            int):
     
     # Allow training agents to work
@@ -258,8 +268,11 @@ def test(
                                                     (tx, hx, cx)
                                                 ))
                             prob   = F.softmax(logit, dim=-1)
-                            action = prob.multinomial(1).data
-                            action = action.numpy()[0, 0]
+
+                            if mode == TEST_MODE_DETERMINISTIC:
+                                action = torch.argmax(prob, dim=-1).item()
+                            elif mode == TEST_MODE_STOCHASTIC:
+                                action = prob.multinomial(1).data.numpy()[0, 0]
 
                         observation, reward, done, _ = env.step(action)
                         num_steps += 1
@@ -275,11 +288,11 @@ def test(
                     instruction_lengths.append(num_steps)
                     total_lengths.append(num_steps)
 
-                logger.add_scalar("TestTrajectoryLenMean/{}".format(instruction_raw), np.mean(instruction_lengths), waited_episodes)
-                logger.add_scalar("TestSuccessRateMean/{}".format(instruction_raw), np.mean(instruction_successes), waited_episodes)
+                logger.add_scalar("{}-TestTrajectoryLenMean/{}".format(mode, instruction_raw), np.mean(instruction_lengths), waited_episodes)
+                logger.add_scalar("{}-TestSuccessRateMean/{}".format(mode, instruction_raw), np.mean(instruction_successes), waited_episodes)
 
-            logger.add_scalar("TestTrajectoryLenMean", np.mean(total_lengths), waited_episodes)
-            logger.add_scalar("TestSuccessRateMean", np.mean(total_successes), waited_episodes)
+            logger.add_scalar("{}-TestTrajectoryLenMean".format(mode), np.mean(total_lengths), waited_episodes)
+            logger.add_scalar("{}-TestSuccessRateMean".format(mode), np.mean(total_successes), waited_episodes)
                 
             if np.mean(total_lengths) > best_model_traj_len:
                 torch.save(model, os.path.join(logdir, "best.model"))
@@ -287,12 +300,20 @@ def test(
             is_testing_iteration_running.set()
 
 
-def get_level1_instructions() -> List[NaturalLanguageInstruction]:
-    dataset_path = os.path.join(get_this_file_path(), "instructions", "level1.json")
+def get_instructions(path: str) -> List[NaturalLanguageInstruction]:
+    dataset_path = os.path.join(path)
     with open(dataset_path, mode="r") as f:
         dataset = json.load(f)
 
     return [(instruction["raw"], instruction["objects_real_order"]) for instruction in dataset["instructions"]]
+
+def get_level1_instructions() -> List[NaturalLanguageInstruction]:
+    dataset_path = os.path.join(get_this_file_path(), "instructions", "level1.json")
+    return get_instructions(dataset_path)
+
+def get_level0_instructions() -> List[NaturalLanguageInstruction]:
+    dataset_path = os.path.join(get_this_file_path(), "instructions", "level0.json")
+    return get_instructions(dataset_path)
 
 def get_instructions_tokenizer(instructions: NaturalLanguageInstruction) -> InstructionTokenizer:
     return InstructionTokenizer([instr[0] for instr in instructions])
@@ -319,14 +340,21 @@ env_definition = InstructionEnvironmentDefinition(
 )
 
 # Target instructions
-instructions = get_level1_instructions()
-tokenizer    = get_instructions_tokenizer(instructions)
+instructions_level = INSTRUCTIONS_LEVEL0
+if instructions_level == INSTRUCTIONS_LEVEL0:
+    instructions = get_level0_instructions()
+elif instructions_level == INSTRUCTIONS_LEVEL1:
+    instructions = get_level1_instructions()
+else:
+    raise NotImplementedError()
+
+tokenizer = get_instructions_tokenizer(instructions)
 
 # Agent set-up
 agent_parameters = {
     "max_episodes":        150000,
     "max_episode_len":     50,
-    "num_processes":       4,
+    "num_processes":       2,
     "learning_rate":       0.001,
     "gamma":               0.95,
     "tau":                 0.00,
@@ -342,6 +370,7 @@ agent.share_memory()
 # Logging set-up
 experiment_folder = create_experiment_folder(
                         os.path.join(get_this_file_path(), "logs"), 
+                        instructions_level,
                         env_definition.name(), 
                         unroll_parameters_in_str(agent_parameters)
 )
@@ -353,7 +382,8 @@ is_testing_iteration_running = mp.Event()
 testing_parameters = {
     "test_every":  100,
     "test_repeat": 5,
-    "seed":        1337
+    "seed":        1337,
+    "mode":        TEST_MODE_STOCHASTIC
 }
 test_args = (
     env_definition,
@@ -365,6 +395,7 @@ test_args = (
     testing_parameters["test_repeat"],
     agent_parameters["max_episodes"] * agent_parameters["num_processes"],
     agent_parameters["max_episode_len"],
+    testing_parameters["mode"],
     testing_parameters["seed"]
 )
 test_process        = mp.Process(target=test, args=test_args)
