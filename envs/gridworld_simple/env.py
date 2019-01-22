@@ -109,8 +109,9 @@ class FindItemsEnv(GoalEnv):
                         - must be of size num_items + 1
         '''
         self._num_items = num_items
-        self._grid = Grid(width, height, num_items)
+        self._grid = Grid(width, height, num_items + 1)
         self._reward_type = reward_type
+        self._agent_pos = None
         self._must_avoid_non_targets = must_avoid_non_targets
 
         if fixed_positions is not None and len(fixed_positions) != (self._num_items + 1):
@@ -179,7 +180,11 @@ class FindItemsEnv(GoalEnv):
             self._spawn_item_at(cell[0], cell[1], item)
 
     def _place_agent_at(self, x, y):
+        if self._agent_pos != None:
+            self._grid.unmark_at(self._agent_pos[0], self._agent_pos[1], self._num_items)
+
         self._agent_pos = (x, y)
+        self._grid.mark_at(x, y, self._num_items)
     
     def _agent_stands_at(self):
         '''
@@ -187,7 +192,7 @@ class FindItemsEnv(GoalEnv):
             item - type of the item the agent looks at right now (defaults to FindItemsEnv.NO_OBJECT)
         '''
         items = self._grid.get_items_at(self._agent_pos[0], self._agent_pos[1])
-        if not items.any():
+        if not items.any() or np.argmax(items) == self._num_items:
             return FindItemsEnv.NO_OBJECT
         else:
             return np.argmax(items)
