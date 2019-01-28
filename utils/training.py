@@ -17,18 +17,32 @@ def fix_random_seeds(seed: int) -> None:
     random.seed(seed)
 
 def create_experiment_folder(root_path: str, instructions_level, env_name: str, agent_name: str) -> str:
-    experiment_path = os.path.join(root_path, instructions_level, env_name, agent_name)
+    experiment_path_without_agent = os.path.join(root_path, instructions_level, env_name)
+    experiment_path_with_agent    = os.path.join(experiment_path_without_agent, agent_name)
 
-    if os.path.isdir(experiment_path):
-        print("This experiment already exists. Do you want to proceed (erase the old one)? (y/n)")
+    print("Experiment path: ")
+    print(experiment_path_with_agent)
+    print()
+    if os.path.isdir(experiment_path_with_agent):
+        print("This experiment already exists. Do you want to erase/add info/cancel? (e/a/c)")
         answer = input()
-        if answer == "y":
+        if answer == "e":
             shutil.rmtree(experiment_path, ignore_errors=True)
-        else:
+        elif answer == "c":
             # Stop the experiment
             exit(0)
+        elif answer == "a":
+            print("Enter additional info (will be added as a prefix to the last folder.")
+            info = input()
+            while not info:
+                print("Please, enter non-empty info.")
+                info = input()
+
+            experiment_path_with_agent = os.path.join(experiment_path_without_agent, info + "-" + agent_name)
+        else:
+            raise Exception("Unexpected input.")
 
     # Make sure we do not overwrite existing experiments
-    os.makedirs(experiment_path, exist_ok=False)
+    os.makedirs(experiment_path_with_agent, exist_ok=False)
 
-    return experiment_path
+    return experiment_path_with_agent
