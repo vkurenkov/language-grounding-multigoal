@@ -4,6 +4,8 @@ import random
 import os
 import shutil
 
+from typing import Dict
+
 
 def fix_random_seeds(seed: int) -> None:
     """
@@ -24,10 +26,10 @@ def create_experiment_folder(root_path: str, instructions_level, env_name: str, 
     print(experiment_path_with_agent)
     print()
     if os.path.isdir(experiment_path_with_agent):
-        print("This experiment already exists. Do you want to erase/add info/cancel? (e/a/c)")
+        print("This experiment already exists. Do you want to erase/add info/cancel/skip? (e/a/c/s)")
         answer = input()
         if answer == "e":
-            shutil.rmtree(experiment_path, ignore_errors=True)
+            shutil.rmtree(experiment_path_with_agent, ignore_errors=True)
         elif answer == "c":
             # Stop the experiment
             exit(0)
@@ -39,10 +41,19 @@ def create_experiment_folder(root_path: str, instructions_level, env_name: str, 
                 info = input()
 
             experiment_path_with_agent = os.path.join(experiment_path_without_agent, info + "-" + agent_name)
+        elif answer == "s":
+            pass
         else:
             raise Exception("Unexpected input.")
 
     # Make sure we do not overwrite existing experiments
-    os.makedirs(experiment_path_with_agent, exist_ok=False)
+    os.makedirs(experiment_path_with_agent, exist_ok=True)
 
     return experiment_path_with_agent
+
+def unroll_parameters_in_str(parameters: Dict) -> str:
+    unrolled = ""
+    for key in sorted(parameters.keys()):
+        unrolled += "{}_{}-".format(key, parameters[key])
+
+    return unrolled[0:-1] # I know, I know. Not the most elegant way.

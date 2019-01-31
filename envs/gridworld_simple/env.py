@@ -119,7 +119,7 @@ class FindItemsEnv(GoalEnv):
 
         self._fixed_positions = fixed_positions
 
-        self.action_space = gym.spaces.Discrete(6)
+        self.action_space = gym.spaces.Discrete(4)
         self.observation_space = gym.spaces.Dict({
             "agent_position": gym.spaces.Tuple((gym.spaces.Discrete(width), gym.spaces.Discrete(height))),
             "grid": gym.spaces.Box(0.0, 1.0, shape=self._grid.get_grid().shape, dtype=np.float32)
@@ -151,10 +151,6 @@ class FindItemsEnv(GoalEnv):
         return abs(pos0[0] - pos1[0]) + abs(pos0[1] - pos1[1])
 
     def _min_num_actions_to_target(self):
-        # If it's done - it's done
-        if self._has_done():
-            return 0
-
         # One item or non-avoidance of the target objects degrades to a manhattan distance
         if self._num_items == 1 or not self._must_avoid_non_targets:
             return -self._get_distance(self._agent_pos, self._items_pos[self._cur_target_item()])
