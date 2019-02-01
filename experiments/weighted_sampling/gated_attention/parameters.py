@@ -34,7 +34,7 @@ train_parameters = {
     "learning_rate":       0.001,
     "gamma":               1.1,
     "tau":                 1.00,
-    "entropy_coeff":       0.01,
+    "entropy_coeff":       0.00,
     "num_bootstrap_steps": 30,
     "sampling_smooth":     0.7,
     "seed":                0
