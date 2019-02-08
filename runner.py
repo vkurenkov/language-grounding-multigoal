@@ -1,1 +1,1 @@
-from experiments.weighted_sampling.gated_attention import train
+from experiments.a3c_ga import train
