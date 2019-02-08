@@ -32,10 +32,11 @@ class A3C_LSTM_GA(nn.Module):
     def __init__(self, input_size: int, max_episode_length: int):
         super(A3C_LSTM_GA, self).__init__()
 
-        # Image Processing
-        self.img1 = nn.Linear(400, 128)
-        self.img2 = nn.Linear(128, 128)
-        self.img3 = nn.Linear(128, 128)
+        # Image Processing (batch_size, 4, 10, 10)
+        self.img1 = nn.Conv2d(in_channels=4, out_channels=128, kernel_size=3, stride=1)
+        self.img2 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=2, stride=1)
+        self.img3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=2, stride=1)
+        # 2304 features
 
         # Instruction Processing
         self.gru_hidden_size = 256
@@ -44,7 +45,7 @@ class A3C_LSTM_GA(nn.Module):
         self.gru = nn.GRU(32, self.gru_hidden_size)
 
         # Gated-Attention layers
-        self.attn_linear = nn.Linear(self.gru_hidden_size, 128)
+        self.attn_linear = nn.Linear(self.gru_hidden_size, 64)
 
         # Time embedding layer, helps in stabilizing value prediction
         self.time_emb_dim = 32
@@ -53,7 +54,7 @@ class A3C_LSTM_GA(nn.Module):
                 self.time_emb_dim)
 
         # A3C layers
-        self.linear = nn.Linear(128, 256)
+        self.linear = nn.Linear(2304, 256)
         self.critic_linear = nn.Linear(256 + self.time_emb_dim, 1)
         self.actor_linear = nn.Linear(256 + self.time_emb_dim, 4)
 
@@ -66,13 +67,10 @@ class A3C_LSTM_GA(nn.Module):
             self.critic_linear.weight.data, 1.0)
         self.critic_linear.bias.data.fill_(0)
 
-        #self.lstm.bias_ih.data.fill_(0)
-        #self.lstm.bias_hh.data.fill_(0)
         self.train()
 
     def forward(self, inputs: torch.Tensor):
         x, input_inst, (tx, hx, cx) = inputs
-        x = x.view(x.size(0), -1)
 
         # Get the image representation
         x = F.relu(self.img1(x))
@@ -88,6 +86,8 @@ class A3C_LSTM_GA(nn.Module):
 
         # Get the attention vector from the instruction representation
         x_attention = F.sigmoid(self.attn_linear(x_instr_rep))
+        x_attention = x_attention.unsqueeze(2).unsqueeze(3)
+        x_attention = x_attention.expand(1, 64, 6, 6)
 
         # Gated-Attention
         assert x_image_rep.size() == x_attention.size()
