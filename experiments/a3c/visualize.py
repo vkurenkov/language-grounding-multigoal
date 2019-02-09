@@ -11,22 +11,22 @@ from utils.training            import fix_random_seeds
 from envs.gridworld_simple.env import FindItemsVisualizator
 
 # Target environment
-from experiments.gated_attention.parameters import env_definition
+from experiments.a3c.parameters import env_definition
 
 # Instructions
-from experiments.gated_attention.parameters import instructions
-from experiments.gated_attention.parameters import instructions_level
-from experiments.gated_attention.parameters import tokenizer
+from experiments.a3c.parameters import instructions
+from experiments.a3c.parameters import instructions_level
+from experiments.a3c.parameters import tokenizer
 
 # Agent's training and testing parameters
-from experiments.gated_attention.parameters import train_parameters
-from experiments.gated_attention.parameters import test_parameters
-from experiments.gated_attention.parameters import experiment_folder
-from experiments.gated_attention.parameters import TEST_MODE_STOCHASTIC
-from experiments.gated_attention.parameters import TEST_MODE_DETERMINISTIC
+from experiments.a3c.parameters import train_parameters
+from experiments.a3c.parameters import test_parameters
+from experiments.a3c.parameters import experiment_folder
+from experiments.a3c.parameters import TEST_MODE_STOCHASTIC
+from experiments.a3c.parameters import TEST_MODE_DETERMINISTIC
 
 # Load the computational model
-from experiments.gated_attention.model import A3C_LSTM_GA
+from experiments.a3c.model import A3C_LSTM_GA
 
 fix_random_seeds(test_parameters["seed"])
 

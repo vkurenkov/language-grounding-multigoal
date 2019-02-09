@@ -68,7 +68,6 @@ class A3C_LSTM_GA(nn.Module):
 
     def forward(self, inputs: torch.Tensor):
         x, input_inst, (tx, hx, cx) = inputs
-        x = x.view(x.size(0), -1)
 
         # Get the image representation
         x = F.relu(self.img1(x))
@@ -82,7 +81,7 @@ class A3C_LSTM_GA(nn.Module):
             _, encoder_hidden = self.gru(word_embedding, encoder_hidden)
         x_instr_rep = encoder_hidden.view(encoder_hidden.size(1), -1)
 
-        x = torch.cat([x, x_instr_rep])
+        x = torch.cat([x.view(x.size(0), -1), x_instr_rep], dim=-1)
 
         # A3C
         x = F.relu(self.linear(x))
