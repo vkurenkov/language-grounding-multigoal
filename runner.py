@@ -1,1 +1,1 @@
-from experiments.a3c import train
+from experiments.weighted_sampling.a3c_ga import train
