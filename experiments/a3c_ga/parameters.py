@@ -31,7 +31,7 @@ train_parameters = {
     "max_episode_len":     30,
     "num_processes":       2,
     "learning_rate":       0.001,
-    "gamma":               1.1,
+    "gamma":               0.85,
     "tau":                 1.00,
     "entropy_coeff":       0.01,
     "num_bootstrap_steps": 30,

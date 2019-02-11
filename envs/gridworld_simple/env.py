@@ -222,7 +222,7 @@ class FindItemsEnv(GoalEnv):
             self._add_to_visited(observed_item)
 
     def _current_observation(self):
-        return (self._agent_pos, self._grid.get_grid())
+        return (self._agent_pos, self._grid.get_grid(copy=True))
 
     def _current_reward(self):
         if(self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS):
@@ -304,7 +304,9 @@ class FindItemsEnv(GoalEnv):
 
         # Reset until the environment is solvable
         if self._not_solvable():
-            return self.reset()
+            # self.reset() cause errors in the inherited classes
+            # so we have this
+            return FindItemsEnv.reset(self)
 
         # Obtain current observation
         output = self._gym_output()
