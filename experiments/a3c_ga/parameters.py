@@ -22,7 +22,7 @@ env_definition = InstructionEnvironmentDefinition(
                         FindItemsEnvObsOnlyGrid,
                         width=10, height=10, num_items=3,
                         must_avoid_non_targets=True,
-                        reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
+                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM,
                         fixed_positions=[(0, 0,), (5, 5), (3, 3), (7, 7)]
 )
 
@@ -32,7 +32,7 @@ train_parameters = {
     "max_episode_len":     30,
     "num_processes":       2,
     "learning_rate":       0.001,
-    "gamma":               1.1,
+    "gamma":               0.85,
     "tau":                 1.00,
     "entropy_coeff":       0.01,
     "num_bootstrap_steps": 30,
