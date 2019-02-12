@@ -1,1 +1,1 @@
-from experiments.a3c_ga import train
+from experiments.dqn_ga import train

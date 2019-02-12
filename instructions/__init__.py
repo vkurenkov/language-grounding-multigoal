@@ -24,5 +24,5 @@ def get_level0_instructions() -> List[NaturalLanguageInstruction]:
     dataset_path = os.path.join(get_this_file_path(), "level0.json")
     return get_instructions(dataset_path)
 
-def get_instructions_tokenizer(instructions: NaturalLanguageInstruction) -> InstructionTokenizer:
-    return InstructionTokenizer([instr[0] for instr in instructions])
+def get_instructions_tokenizer(instructions: NaturalLanguageInstruction, padding_len=None) -> InstructionTokenizer:
+    return InstructionTokenizer([instr[0] for instr in instructions], padding_len)
