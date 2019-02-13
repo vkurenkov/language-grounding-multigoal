@@ -26,17 +26,17 @@ env_definition = InstructionEnvironmentDefinition(
                         FindItemsEnvObsOnlyGrid,
                         width=10, height=10, num_items=3,
                         must_avoid_non_targets=True,
-                        reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
+                        reward_type=FindItemsEnv.REWARD_TYPE_EVERY_ITEM,
                         fixed_positions=[(0, 0,), (5, 5), (3, 3), (7, 7)]
 )
 
 # Agent's training parameters
 train_parameters = {
-    "max_episodes":        10000,
+    "max_episodes":        5000,
     "max_episode_len":     30,
 
     "learning_rate":       0.001,
-    "gamma":               0.0,
+    "gamma":               0.98,
 
     "eps_start":           0.95,
     "eps_end":             0.01,
@@ -44,9 +44,9 @@ train_parameters = {
 
     "replay_size":         1000000, # in frames
     "batch_size":          512,
-    "model_switch":        500, # in episodes
+    "model_switch":        200, # in episodes
 
-    "padding_len":         24,
+    "padding_len":         8,
     "seed":                0
 }
 
@@ -54,15 +54,15 @@ train_parameters = {
 TEST_MODE_STOCHASTIC      = "Stochastic"
 TEST_MODE_DETERMINISTIC   = "Determenistic"
 test_parameters = {
-    "test_every":  500,
+    "test_every":  200,
     "test_repeat": 5,
     "seed":        1337,
     "mode":        TEST_MODE_STOCHASTIC
 }
 
 # Target instructions
-instructions_level = "level1"
-instructions       = get_level1_instructions()
+instructions_level = "level0"
+instructions       = get_level0_instructions()
 tokenizer          = get_instructions_tokenizer(instructions, train_parameters["padding_len"])
 
 # Experimental logging path setup
