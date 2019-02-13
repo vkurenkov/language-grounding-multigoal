@@ -1,4 +1,4 @@
 docker build -t vlad/thesis -f Dockerfile .
-docker run -ti \
+docker run --runtime=nvidia -ti \
     --volume $PWD:/workspace \
-    vlad/thesis 
+    vlad/thesis /bin/bash
