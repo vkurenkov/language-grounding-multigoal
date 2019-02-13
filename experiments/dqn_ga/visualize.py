@@ -33,7 +33,7 @@ from experiments.dqn_ga.parameters import device
 fix_random_seeds(test_parameters["seed"])
 
 model = Model(tokenizer.get_vocabulary_size(), train_parameters["max_episode_len"])
-model.load_state_dict(torch.load(os.path.join(experiment_folder, "best.model")))
+model.load_state_dict(torch.load(os.path.join(experiment_folder, "best.model"), map_location='cpu'))
 model.to(device)
 model.eval()
 

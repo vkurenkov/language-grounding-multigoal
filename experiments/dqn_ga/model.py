@@ -77,7 +77,7 @@ class Model(nn.Module):
 
         # Get the instruction representation
         encoder_hidden = torch.zeros(1, batch_size, self.gru_hidden_size, requires_grad=True)
-        encoder_hidden.to(device)
+        encoder_hidden = encoder_hidden.to(device)
         for i in range(input_inst.data.size(1)):
             word_embedding = self.embedding(input_inst[:, i]).view(batch_size, 1, -1)
             _, encoder_hidden = self.gru(word_embedding, encoder_hidden)

@@ -25,25 +25,24 @@ env_definition = InstructionEnvironmentDefinition(
                         FindItemsEnvObsOnlyGrid,
                         width=10, height=10, num_items=3,
                         must_avoid_non_targets=True,
-                        reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS,
-                        fixed_positions=[(0, 0,), (5, 5), (3, 3), (7, 7)]
+                        reward_type=FindItemsEnv.REWARD_TYPE_MIN_ACTIONS
 )
 
 # Agent's training parameters
 train_parameters = {
-    "max_episodes":        1000,
+    "max_episodes":        50000,
     "max_episode_len":     30,
 
-    "learning_rate":       0.01,
+    "learning_rate":       0.001,
     "gamma":               0.0,
 
     "eps_start":           0.95,
     "eps_end":             0.01,
-    "eps_episodes":        1000,
+    "eps_episodes":        50000,
 
     "replay_size":         1000000, # in frames
-    "batch_size":          256,
-    "model_switch":        50, # in episodes
+    "batch_size":          512,
+    "model_switch":        500, # in episodes
 
     "padding_len":         8,
     "seed":                0
@@ -53,7 +52,7 @@ train_parameters = {
 TEST_MODE_STOCHASTIC      = "Stochastic"
 TEST_MODE_DETERMINISTIC   = "Determenistic"
 test_parameters = {
-    "test_every":  50,
+    "test_every":  500,
     "test_repeat": 5,
     "seed":        1337,
     "mode":        TEST_MODE_STOCHASTIC
