@@ -8,6 +8,7 @@ import heapq
 from typing import Tuple, List, Dict, Optional
 from envs.goal.env import GoalEnv, GoalStatus
 from matplotlib import animation
+from warnings import warn
 
 
 # Type Aliases
@@ -218,47 +219,57 @@ class FindItemsEnv(GoalEnv):
         if not self._must_avoid_non_targets:
             if observed_item == self._cur_target_item():
                 self._add_to_visited(observed_item)
+                self._just_visited = True
         else:
-            self._add_to_visited(observed_item)
+            if observed_item != FindItemsEnv.NO_OBJECT:
+                self._add_to_visited(observed_item)
+                self._just_visited = True
+
 
     def _current_observation(self):
         return (self._agent_pos, self._grid.get_grid(copy=True))
 
     def _current_reward(self):
-        if(self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS):
-            return self._min_num_actions_to_target()
-        elif(self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM):
-            if self._cur_target_item() == self._agent_stands_at():
-                return 1.0
-        elif(self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM):
-            if len(self._items_visit_order) == len(self._visited_items) + 1:
-                if self._cur_target_item() == self._agent_stands_at():
-                    return 1.0
-        else:
-            raise Exception("No such reward type!")
+        # if(self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS):
+        #     return self._min_num_actions_to_target()
+        # elif(self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM):
+        #     if self._cur_target_item() == self._agent_stands_at():
+        #         return 1.0
+        # elif(self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM):
+        #     if len(self._items_visit_order) == len(self._visited_items) + 1:
+        #         if self._cur_target_item() == self._agent_stands_at():
+        #             return 1.0
+        # else:
+        #     raise Exception("No such reward type!")
         
-        return 0.0
+        # return 0.0
+        return self.reward_per_instruction(self.instruction)
 
     def _has_done(self):
-        target_item = self._cur_target_item()
-        observed_item = self._agent_stands_at()
-        # All items were seen
-        if target_item == FindItemsEnv.NO_OBJECT:
+        if self.is_instruction_over(self.instruction) or \
+            self.is_instruction_just_succeed(self.instruction):
             return True
         else:
-            if observed_item == FindItemsEnv.NO_OBJECT:
-                return False
-            else:
-                if observed_item != target_item:
-                    if self._must_avoid_non_targets:
-                        return True
-                    else:
-                        return False
-                else:
-                    if len(self._items_visit_order) == len(self._visited_items) + 1:
-                        return True
-                    else:
-                        return False
+            return False
+        # target_item = self._cur_target_item()
+        # observed_item = self._agent_stands_at()
+        # # All items were seen
+        # if target_item == FindItemsEnv.NO_OBJECT:
+        #     return True
+        # else:
+        #     if observed_item == FindItemsEnv.NO_OBJECT:
+        #         return False
+        #     else:
+        #         if observed_item != target_item:
+        #             if self._must_avoid_non_targets:
+        #                 return True
+        #             else:
+        #                 return False
+        #         else:
+        #             if len(self._items_visit_order) == len(self._visited_items) + 1:
+        #                 return True
+        #             else:
+        #                 return False
 
     def _gym_output(self):
         '''
@@ -298,6 +309,7 @@ class FindItemsEnv(GoalEnv):
         self._randomly_place_items_and_agent()
         self._reset_instruction(self.instruction)
         self._visited_items = []
+        self._just_visited  = False
 
         # Build shortest paths to items from every point
         self._shortest_paths = FindItemsEnvShortestPaths(self)
@@ -329,8 +341,10 @@ class FindItemsEnv(GoalEnv):
             done - whether the mission is terminated (successful or not)
             info - defaults to None
         '''
-        agent_pos = self._agent_pos
-        pos_to_move = None
+        agent_pos          = self._agent_pos
+        pos_to_move        = None
+        self._just_visited = False
+        
         if action == FindItemsEnv.ACTION_MOVE_UP:
             pos_to_move = (agent_pos[0], agent_pos[1] + 1)
         elif action == FindItemsEnv.ACTION_MOVE_DOWN:
@@ -345,10 +359,11 @@ class FindItemsEnv(GoalEnv):
         if self._grid.is_within_the_grid(pos_to_move[0], pos_to_move[1]):
             self._place_agent_at(pos_to_move[0], pos_to_move[1])
 
-        # First - calculate rewards, state, and so on
-        output = self._gym_output()
-
+        # Update the state of the environment
         self._update_visited_items()
+
+        # Calculate rewards, done, and etc. based on this new state
+        output = self._gym_output()
 
         return output
 
@@ -371,6 +386,101 @@ class FindItemsEnv(GoalEnv):
             rew_type = "rew_last_item"
 
         return "/".join(["gridworld", str(obs_type), str(placement), str(grid), str(rew_type)])
+
+    def is_subgoal_just_completed(self, instruction: List[int], cur_subgoal: int) -> bool:
+        if (cur_subgoal + 1) > len(instruction):
+            return False
+
+        if (cur_subgoal + 1) == len(self._visited_items):
+            if not self._just_visited:
+                return False
+            
+            for subgoal in reversed(range(0, cur_subgoal + 1)):
+                if self._visited_items[subgoal] != instruction[subgoal]:
+                    return False
+
+            return True
+        else:
+            return False
+
+    def is_instruction_over(self, instruction: List[int]) -> bool:
+        """
+            Checks if the provided instruction is failed or already over.
+            Failing leads to an immediate over.
+            Success leads to checking if it is just visited. And only it is not true -> over.
+        """
+        if not self._must_avoid_non_targets:
+            return False
+        else:
+            if len(self._visited_items) > len(instruction):
+                return True
+            else:
+                # Check that all visited items do match with target items
+                for visited_item, true_item in zip(self._visited_items, instruction):
+                    if visited_item != true_item:
+                        return True
+
+                # If all of them do match and lens are equal -> we're done with the instruction
+                # Over is not just completed
+                if len(self._visited_items) == len(instruction) and not self._just_visited:
+                    return True
+                else:
+                    # TODO: If the net object is not present at the grid at all -> OVER
+                    return False
+
+    def is_instruction_just_succeed(self, instruction: List[int]) -> bool:
+        if self.is_instruction_over(instruction):
+            return False
+        if len(self._visited_items) == len(instruction) and self._just_visited:
+            return True
+        else:
+            return False
+
+    def reward_per_instruction(self, instruction: List[int]) -> float:
+        if self.is_instruction_over(instruction):
+            warn("You're trying to get a reward for an instructions that is already over.")
+            if self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM or \
+                self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM:
+                return 0.0
+            elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
+                subgoal_ind = len(self._visited_items) - 1
+                return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
+            else:
+                raise NotImplementedError("Undefined reward type.")
+        else:
+            # Just visited the last item
+            if len(self._visited_items) == len(instruction) \
+                and self._visited_items[-1] == instruction[-1]:
+                if self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
+                    return 0.0
+                elif self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM \
+                        or self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
+                    return 1.0
+                else:
+                    raise NotImplementedError("Undefined reward type.")
+
+            # Just visited some correct item (verified by is_instruction_over)
+            if self._just_visited:
+                if self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM:
+                    return 0.0 # Sorry, not until you get to the last object right
+                elif self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
+                    return 1.0 # You did right
+                elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
+                    return 0.0 # Minimum possible distance
+                else:
+                    raise NotImplementedError("Undefined reward type.")
+            # Just wondering somewhere
+            else:
+                if self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM:
+                    return 0.0 # Sorry, not until you get to the last object right
+                elif self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
+                    return 1.0 # Sorry, not until you get to the following object
+                elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
+                    subgoal_ind = len(self._visited_items)
+                    return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
+                else:
+                    raise NotImplementedError("Undefined reward type.")
+
 
 
 class FindItemsEnvObsOnlyGrid(FindItemsEnv):
