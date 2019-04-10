@@ -75,6 +75,7 @@ class FindItemsEnv(GoalEnv):
             2 - Get reward for reaching every item.
         - Can be shaped
             1 - Reward - is a minimum manhattan distance to the current item.
+                (it is provided with MDP-preserving transformation via potential function)
 
     Observation:
         - The entire grid of size (num_items, width, height)
@@ -180,6 +181,7 @@ class FindItemsEnv(GoalEnv):
         if self._agent_pos != None:
             self._grid.unmark_at(self._agent_pos[0], self._agent_pos[1], self._num_items)
 
+        self._prev_agent_pos = self._agent_pos
         self._agent_pos = (x, y)
         self._grid.mark_at(x, y, self._num_items)
     
@@ -244,6 +246,18 @@ class FindItemsEnv(GoalEnv):
         
         # return 0.0
         return self.reward_per_instruction(self.instruction)
+
+    def _potential_min_actions_reward(self, instruction):
+        # If just visited then we should check distances for the previous item not for the current
+        # Should return 1 for this environment
+        if self._just_visited:
+            subgoal_ind = len(self._visited_items) - 1 
+        else:
+            subgoal_ind = len(self._visited_items) 
+        cur_distance  = len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
+        prev_distance = len(self._shortest_paths.get_path(self._prev_agent_pos, instruction[subgoal_ind]))
+
+        return prev_distance - cur_distance
 
     def _has_done(self):
         if self.is_instruction_over(self.instruction) or \
@@ -310,6 +324,8 @@ class FindItemsEnv(GoalEnv):
         self._reset_instruction(self.instruction)
         self._visited_items = []
         self._just_visited  = False
+        self._prev_agent_pos = self._agent_pos # For the potential reward transformation
+
 
         # Build shortest paths to items from every point
         self._shortest_paths = FindItemsEnvShortestPaths(self)
@@ -443,8 +459,9 @@ class FindItemsEnv(GoalEnv):
                 self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM:
                 return 0.0
             elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
-                subgoal_ind = len(self._visited_items) - 1
-                return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
+                # subgoal_ind = len(self._visited_items) - 1
+                # return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
+                return -10.0 + self._potential_min_actions_reward(instruction)
             else:
                 raise NotImplementedError("Undefined reward type.")
         else:
@@ -452,7 +469,7 @@ class FindItemsEnv(GoalEnv):
             if len(self._visited_items) == len(instruction) \
                 and self._visited_items[-1] == instruction[-1]:
                 if self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
-                    return 0.0
+                    return 10.0 + self._potential_min_actions_reward(instruction)
                 elif self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM \
                         or self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
                     return 1.0
@@ -466,7 +483,7 @@ class FindItemsEnv(GoalEnv):
                 elif self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
                     return 1.0 # You did right
                 elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
-                    return 0.0 # Minimum possible distance
+                    return self._potential_min_actions_reward(instruction)
                 else:
                     raise NotImplementedError("Undefined reward type.")
             # Just wondering somewhere
@@ -476,8 +493,7 @@ class FindItemsEnv(GoalEnv):
                 elif self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
                     return 1.0 # Sorry, not until you get to the following object
                 elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
-                    subgoal_ind = len(self._visited_items)
-                    return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
+                    return self._potential_min_actions_reward(instruction)
                 else:
                     raise NotImplementedError("Undefined reward type.")
 
