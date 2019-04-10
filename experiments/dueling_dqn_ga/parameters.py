@@ -38,7 +38,7 @@ train_parameters = {
     "learning_rate":       0.001,
     "gamma":               1.0,
 
-    "stack_frames":        1,
+    "stack_frames":        4,
 
     "eps_start":           0.95,
     "eps_end":             0.01,
