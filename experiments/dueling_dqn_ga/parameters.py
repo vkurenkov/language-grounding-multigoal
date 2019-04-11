@@ -32,7 +32,7 @@ env_definition = InstructionEnvironmentDefinition(
 
 # Agent's training parameters
 train_parameters = {
-    "max_episodes":        120000,
+    "max_episodes":        60000,
     "max_episode_len":     30,
 
     "learning_rate":       0.001,
@@ -42,7 +42,7 @@ train_parameters = {
 
     "eps_start":           0.95,
     "eps_end":             0.01,
-    "eps_episodes":        120000,
+    "eps_episodes":        60000,
 
     "replay_size":         1000000, # in frames
     "batch_size":          512,
