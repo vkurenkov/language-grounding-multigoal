@@ -32,7 +32,7 @@ env_definition = InstructionEnvironmentDefinition(
 
 # Agent's training parameters
 train_parameters = {
-    "max_episodes":        6000,
+    "max_episodes":        120000,
     "max_episode_len":     30,
 
     "learning_rate":       0.001,
@@ -42,11 +42,11 @@ train_parameters = {
 
     "eps_start":           0.95,
     "eps_end":             0.01,
-    "eps_episodes":        6000,
+    "eps_episodes":        120000,
 
     "replay_size":         1000000, # in frames
     "batch_size":          512,
-    "model_switch":        300, # in episodes
+    "model_switch":        570, # in episodes
 
     "padding_len":         24,
     "seed":                0
@@ -56,15 +56,15 @@ train_parameters = {
 TEST_MODE_STOCHASTIC      = "Stochastic"
 TEST_MODE_DETERMINISTIC   = "Determenistic"
 test_parameters = {
-    "test_every":  300,
+    "test_every":  570,
     "test_repeat": 2,
     "seed":        1337,
     "mode":        TEST_MODE_STOCHASTIC
 }
 
 # Target instructions
-instructions_level = "level0"
-instructions       = get_level0_instructions()
+instructions_level = "level1"
+instructions       = get_level1_instructions()
 tokenizer          = get_instructions_tokenizer(instructions, train_parameters["padding_len"])
 
 # Experimental logging path setup
