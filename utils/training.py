@@ -18,8 +18,8 @@ def fix_random_seeds(seed: int) -> None:
     numpy.random.seed(seed)
     random.seed(seed)
 
-def create_experiment_folder(root_path: str, instructions_level, env_name: str, agent_name: str) -> str:
-    experiment_path_without_agent = os.path.join(root_path, instructions_level, env_name)
+def create_experiment_folder(root_path: str, instructions_level, env_name: str, layouts_name: str, agent_name: str) -> str:
+    experiment_path_without_agent = os.path.join(root_path, instructions_level, env_name, layouts_name)
     experiment_path_with_agent    = os.path.join(experiment_path_without_agent, agent_name)
 
     print("Experiment path: ")
