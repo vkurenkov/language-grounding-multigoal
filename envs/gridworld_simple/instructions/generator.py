@@ -46,12 +46,20 @@ def generate_compound_instructions(objects, max_instruction_length):
 
     :return compounds: A list of generated instructions in natural language and object ids in the right order.
     '''
+    def no_from_self_to_itself(objects):
+        for ind in range(len(objects) - 1):
+            if objects[ind] == objects[ind + 1]:
+                return False
+        return True
     names = list(objects.keys())
+
+    total_possibilities = 0
+    valid_possibilities = 0
 
     possible_compounds = traverse_fsm(states, transitions, "start", [], depth=0, max_depth=max_instruction_length)
     compounds = []
     for seq in possible_compounds:
-        permutations = itertools.permutations(names, len(seq))
+        permutations = itertools.product(names, repeat=len(seq))
         for permutation in permutations:
             instruction               = ""
             instruction_real_order         = []
@@ -63,13 +71,20 @@ def generate_compound_instructions(objects, max_instruction_length):
                 instruction_text_order.append(objects[name])
                 conjunctions.append(conjunction_from_state(states[state]))
 
-            compounds.append({
-                "raw": instruction, 
-                "objects_real_order": instruction_real_order,
-                "objects_text_order": instruction_text_order,
-                "conjunctions": conjunctions
-            })
+            # Instructions that require to move from "red" to "red" and etc. are ignore
+            total_possibilities += 1
+            if no_from_self_to_itself(instruction_real_order):
+                compounds.append({
+                    "raw": instruction, 
+                    "objects_real_order": instruction_real_order,
+                    "objects_text_order": instruction_text_order,
+                    "conjunctions": conjunctions
+                })
+                valid_possibilities += 1
     
+    print(valid_possibilities)
+    print(total_possibilities)
+    print(valid_possibilities / total_possibilities)
     return compounds
 
 
@@ -100,7 +115,7 @@ def extract_level1_instructions(instructions):
 
 
 if __name__ == "__main__":
-    instructions         = generate_compound_instructions(name_mapping, max_instruction_length=3)
+    instructions         = generate_compound_instructions(name_mapping, max_instruction_length=6)
     instructions_level1  = extract_level1_instructions(instructions)
     instructions_dataset = {
         "conjunctions": [conjunction_from_state(state) for state in states.values()],
