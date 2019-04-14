@@ -461,7 +461,7 @@ class FindItemsEnv(GoalEnv):
             elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
                 # subgoal_ind = len(self._visited_items) - 1
                 # return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
-                return -10.0 + self._potential_min_actions_reward(instruction)
+                return -10.0
             else:
                 raise NotImplementedError("Undefined reward type.")
         else:

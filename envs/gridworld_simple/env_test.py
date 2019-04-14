@@ -61,7 +61,7 @@ def test_env_should_support_multiple_items():
 
     (_, grid), _, _, _ = env.reset()
 
-    assert grid.shape[0] == 3 
+    assert grid.shape[0] == 4 
 
 
 def test_env_should_support_reward_as_minimum_number_of_actions_when_avoiding_non_targets():
@@ -86,30 +86,57 @@ def test_env_should_support_reward_as_minimum_number_of_actions_when_avoiding_no
     # At the beginning
     env.seed(1)
     _, reward, *_ = env.reset()
-    assert reward == -6
+    assert reward == 0
 
-    # After the first item
-    env.step(env.ACTION_MOVE_RIGHT)
-    env.step(env.ACTION_MOVE_UP)
-    env.step(env.ACTION_MOVE_UP)
-    env.step(env.ACTION_MOVE_UP)
-    env.step(env.ACTION_MOVE_UP)
+    # Arriving at 0
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+    assert reward == 1
     _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+    assert reward == 1
 
-    assert reward == 0
-
-    # Finishing
-    env.step(env.ACTION_MOVE_LEFT)
-    env.step(env.ACTION_MOVE_LEFT)
-    env.step(env.ACTION_MOVE_LEFT)
-    env.step(env.ACTION_MOVE_LEFT)
-    env.step(env.ACTION_MOVE_LEFT)
+    # Arriving at 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_LEFT)
+    assert reward == 1
     _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
-    assert reward == 0
+    assert reward == 1
 
-    # To be sure
+    # Arriving at 2
     _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
-    assert reward == -6
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_UP)
+    assert reward == -1
+    _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
+    assert reward == 1
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == 11
+    _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
+    assert reward == -10
 
 
 def test_env_should_support_reward_as_minimum_number_of_actions_when_not_avoiding_non_targets():
@@ -134,7 +161,7 @@ def test_env_should_support_reward_as_minimum_number_of_actions_when_not_avoidin
     # At the beginning
     env.seed(1)
     _, reward, *_ = env.reset()
-    assert reward == -4
+    assert reward == 0
 
     # After the first item
     env.step(env.ACTION_MOVE_UP)
@@ -142,7 +169,7 @@ def test_env_should_support_reward_as_minimum_number_of_actions_when_not_avoidin
     env.step(env.ACTION_MOVE_UP)
     _, reward, *_ = env.step(env.ACTION_MOVE_UP)
 
-    assert reward == 0
+    assert reward == 1
 
     # Finishing
     env.step(env.ACTION_MOVE_LEFT)
@@ -151,11 +178,11 @@ def test_env_should_support_reward_as_minimum_number_of_actions_when_not_avoidin
     env.step(env.ACTION_MOVE_LEFT)
     env.step(env.ACTION_MOVE_LEFT)
     _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
-    assert reward == 0
+    assert reward == 1
 
     # To be sure
     _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
-    assert reward == -6
+    assert reward == 1
 
 
 def test_env_should_support_reward_per_every_item_in_instruction():
@@ -232,7 +259,7 @@ def test_env_should_output_grid_and_agent_position():
     agent_pos = obs[0]
     grid      = obs[1]
 
-    assert (agent_pos == (0, 0)) and (grid.shape == (3, 10, 10))
+    assert (agent_pos == (0, 0)) and (grid.shape == (4, 10, 10))
 
 
 def test_env_should_allow_agent_to_move_in_4_directions():
@@ -310,7 +337,7 @@ def test_env_should_track_goal_status_when_not_avoiding_non_target_objects():
     env.step(env.ACTION_MOVE_RIGHT)
     env.step(env.ACTION_MOVE_DOWN)
     _, reward, done, *_ = env.step(env.ACTION_MOVE_DOWN)
-    assert reward == 0 and done and env.goal_status() == GoalStatus.SUCCESS
+    assert reward == 11 and done and env.goal_status() == GoalStatus.SUCCESS
 
 
 def test_env_should_track_goal_failure_when_avoiding_non_target_objects():
@@ -393,4 +420,4 @@ def test_env_should_track_goal_success_when_avoiding_non_target_objects():
     env.step(env.ACTION_MOVE_RIGHT)
     env.step(env.ACTION_MOVE_DOWN)
     _, reward, done, *_ = env.step(env.ACTION_MOVE_DOWN)
-    assert reward == 0 and done and env.goal_status() == GoalStatus.SUCCESS
+    assert reward == 11 and done and env.goal_status() == GoalStatus.SUCCESS
