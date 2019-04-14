@@ -603,13 +603,15 @@ class FindItemsEnvShortestPaths:
 
 
 class FindItemsVisualizator:
+    COLORS = {0: "red", 1: "blue", 2: "green"}
+
     @staticmethod
     def pyplot(env):
         fig, a = plt.subplots()
         
         # Plot the grid
         grid = env._grid
-        num_items = grid._num_items
+        num_items = grid._num_items - 1 # 1 for the player
         width = grid._width
         height = grid._height
 
@@ -625,18 +627,29 @@ class FindItemsVisualizator:
                 items = grid.get_items_at(x, y)
                 if items.any():
                     item = np.argmax(items)
+                    # Ignore the player
+                    if item == num_items:
+                        continue
 
-                    cmap = plt.cm.rainbow
-                    norm = plt_colors.Normalize(0, num_items)
-                    itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color=cmap(norm(item)))
-                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item))
+                    if num_items > len(FindItemsVisualizator.COLORS):
+                        cmap  = plt.cm.rainbow
+                        norm  = plt_colors.Normalize(0, num_items)
+                        color = cmap(norm(item))
+                    else:
+                        color = FindItemsVisualizator.COLORS[item]
+                    itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color=color)
+                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item), weight="bold")
                     a.add_artist(itm)
                     a.add_artist(txt)
 
         # Plot the agent position
         agent_pos = (env._agent_pos[0] + 0.5, env._agent_pos[1] + 0.5)
-        agent = plt.Circle(agent_pos, radius=0.25, color="r")
+
+        txt   = plt.Text(agent_pos[0] - 0.1, agent_pos[1] - 0.1, text="A", weight="bold")
+        agent = plt.Circle(agent_pos, radius=0.3, color="black", linewidth=1, fill=False)
+
         a.add_artist(agent)
+        a.add_artist(txt)
 
         plt.show(fig)
 
