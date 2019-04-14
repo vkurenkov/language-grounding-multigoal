@@ -1,1 +1,1 @@
-from experiments.dueling_dqn_ga_per import train
+from experiments.dueling_dqn_ga import train
