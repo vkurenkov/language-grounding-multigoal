@@ -95,7 +95,9 @@ class FindItemsEnv(GoalEnv):
     REWARD_TYPE_MIN_ACTIONS = 1
     REWARD_TYPE_EVERY_ITEM = 2
     REWARD_TYPE_LAST_ITEM = 3
-    
+
+
+    ### Private methods
     def __init__(self, width, height, num_items, reward_type,
                  instruction=[0], must_avoid_non_targets=False,
                  fixed_positions=None):
@@ -116,10 +118,7 @@ class FindItemsEnv(GoalEnv):
         self._agent_pos = None
         self._must_avoid_non_targets = must_avoid_non_targets
 
-        if fixed_positions is not None and len(fixed_positions) != (self._num_items + 1):
-            raise Exception("Number of fixed positions must be equal to number of items + 1 (for the agent).")
-
-        self._fixed_positions = fixed_positions
+        self.fix_initial_positions(fixed_positions)
 
         self.action_space = gym.spaces.Discrete(4)
         self.observation_space = gym.spaces.Dict({
@@ -131,12 +130,28 @@ class FindItemsEnv(GoalEnv):
         self.reset()
 
     def _not_solvable(self):
+        """
+        Check if the environment not solvable for any possible instructions with the objects.
+        """
         start_pos = self._agent_pos
-        for cur_item in self._items_visit_order:
+        
+        # 0 - Base cases
+        if self._num_items == 0:
+            return True
+        if self._num_items == 1:
+            return False
+
+        # 1 - Must be able to arrive from start position to all the items
+        for cur_item in range(self._num_items):
             if self._shortest_paths.get_path(start_pos, cur_item) is None:
                 return True
 
-            start_pos = self._items_pos[cur_item]
+        # 2 - Must be able to arrive at any object from any object
+        for cur_item in range(self._num_items - 1):
+            from_pos = self._items_pos[cur_item]
+            for target_item in range(cur_item + 1, self._num_items):
+                if self._shortest_paths.get_path(from_pos, target_item) is None:
+                    return True
 
         return False
 
@@ -227,7 +242,6 @@ class FindItemsEnv(GoalEnv):
                 self._add_to_visited(observed_item)
                 self._just_visited = True
 
-
     def _current_observation(self):
         return (self._agent_pos, self._grid.get_grid(copy=True))
 
@@ -295,6 +309,8 @@ class FindItemsEnv(GoalEnv):
         '''
         return self._current_observation(), self._current_reward(), self._has_done(), None
 
+    
+    ### Asynchronous stuff (deprecated)
     def handle_message(self, msg):
         """
         Handles custom messages (useful for asynchronous environments).
@@ -302,15 +318,34 @@ class FindItemsEnv(GoalEnv):
         """
         self._reset_instruction(msg)
 
-    def goal_status(self) -> GoalStatus:
-        for i in range(len(self._visited_items)):
-            if self._visited_items[i] != self._items_visit_order[i]:
-                return GoalStatus.FAILURE
-            if i >= (len(self._items_visit_order) - 1):
-                return GoalStatus.SUCCESS
-        
-        return GoalStatus.IN_PROGRESS
 
+    ### Public methods: Layouts generation and setting.
+    def fix_initial_positions(self, positions) -> None:
+        """
+        Fix initial positions of the agent and items.
+        The changes are applied after the next reset.
+        """
+        if positions is not None and len(positions) != (self._num_items + 1):
+            raise Exception("Number of fixed positions must be equal to number of items + 1 (for the agent).")
+
+        self._fixed_positions = positions
+
+    def generate_layouts(self, num_layouts: int, seed: int):
+        """
+        This is a very strange way (not obvious, not safe, and etc.) to generate random layouts for this environment.
+        """
+        layouts = []
+        for _ in range(num_layouts):
+            self.reset()
+            layout = [self._agent_pos]
+            for item in self._items_pos:
+                layout.append(self._items_pos[item])
+            layouts.append(layout)
+        
+        return layouts
+
+    
+    ### Public methods: Gym interface.
     def reset(self):
         '''
         output:
@@ -385,12 +420,6 @@ class FindItemsEnv(GoalEnv):
 
     def name(self):
         obs_type = "full_obs"
-        if self._fixed_positions is None:
-            placement = "randomized"
-        else:
-            positions = "_".join(["(" + str(x) + "_" + str(y) + ")" for (x, y) in self._fixed_positions])
-            placement = "fixed_" + positions
-
         grid = "grid_" + str(self._grid._width) + "_" + str(self._grid._height) + "_" + str(self._num_items)
 
         rew_type = "rew_unknown"
@@ -401,8 +430,10 @@ class FindItemsEnv(GoalEnv):
         elif self._reward_type == self.REWARD_TYPE_LAST_ITEM:
             rew_type = "rew_last_item"
 
-        return "/".join(["gridworld", str(obs_type), str(placement), str(grid), str(rew_type)])
+        return "/".join(["gridworld", str(obs_type), str(grid), str(rew_type)])
 
+
+    ### Public methods: Rewards and subgoal utilities.
     def is_subgoal_just_completed(self, instruction: List[int], cur_subgoal: int) -> bool:
         if (cur_subgoal + 1) > len(instruction):
             return False
@@ -496,6 +527,15 @@ class FindItemsEnv(GoalEnv):
                     return self._potential_min_actions_reward(instruction)
                 else:
                     raise NotImplementedError("Undefined reward type.")
+
+    def goal_status(self) -> GoalStatus:
+        for i in range(len(self._visited_items)):
+            if self._visited_items[i] != self._items_visit_order[i]:
+                return GoalStatus.FAILURE
+            if i >= (len(self._items_visit_order) - 1):
+                return GoalStatus.SUCCESS
+        
+        return GoalStatus.IN_PROGRESS
 
 
 

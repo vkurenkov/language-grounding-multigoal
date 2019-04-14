@@ -1,5 +1,6 @@
 from typing import List
 from typing import Tuple
+from typing import Optional
 
 
 # Type aliases
@@ -25,12 +26,9 @@ class InstructionEnvironmentDefinition:
     def _get_name(self):
         return self._env_constructor(**self._kwargs).name()
 
-    def build_env(self, instruction: Instruction):
-        if not instruction:
-            raise Exception("Instruction must be provided.")
-
-        self._kwargs["instruction"] = instruction
-
+    def build_env(self, instruction: Optional[Instruction]=None):
+        if instruction is not None:
+            self._kwargs["instruction"] = instruction
         return self._env_constructor(**self._kwargs)
 
     def name(self):
