@@ -19,7 +19,7 @@ from utils.training             import create_experiment_folder
 from utils.training             import unroll_parameters_in_str
 
 # Computing device
-device = torch.device("cpu")
+device = torch.device("cuda")
 
 # Target environment
 env_definition = InstructionEnvironmentDefinition(
@@ -32,17 +32,17 @@ env_definition = InstructionEnvironmentDefinition(
 
 # Agent's training parameters
 train_parameters = {
-    "max_episodes":        60000,
+    "max_episodes":        60000*2,
     "max_episode_len":     30,
 
     "learning_rate":       0.001,
     "gamma":               1.0,
 
-    "stack_frames":        4,
+    "stack_frames":        2,
 
     "eps_start":           0.95,
     "eps_end":             0.01,
-    "eps_episodes":        60000,
+    "eps_episodes":        60000*2,
 
     "replay_size":         1000000, # in frames
     "batch_size":          512,
