@@ -193,6 +193,11 @@ class FindItemsEnv(GoalEnv):
             self._spawn_item_at(cell[0], cell[1], item)
 
     def _place_agent_at(self, x, y):
+        # Do not move outside the grid (but don't forget to update previous position)
+        if not self._grid.is_within_the_grid(x, y):
+            self._prev_agent_pos = self._agent_pos
+            return
+
         if self._agent_pos != None:
             self._grid.unmark_at(self._agent_pos[0], self._agent_pos[1], self._num_items)
 
@@ -407,8 +412,7 @@ class FindItemsEnv(GoalEnv):
         else:
             raise Exception("There is no such action.")
 
-        if self._grid.is_within_the_grid(pos_to_move[0], pos_to_move[1]):
-            self._place_agent_at(pos_to_move[0], pos_to_move[1])
+        self._place_agent_at(pos_to_move[0], pos_to_move[1])
 
         # Update the state of the environment
         self._update_visited_items()
@@ -492,7 +496,7 @@ class FindItemsEnv(GoalEnv):
             elif self._reward_type == FindItemsEnv.REWARD_TYPE_MIN_ACTIONS:
                 # subgoal_ind = len(self._visited_items) - 1
                 # return -len(self._shortest_paths.get_path(self._agent_pos, instruction[subgoal_ind]))
-                return -10.0
+                return 0.0
             else:
                 raise NotImplementedError("Undefined reward type.")
         else:
@@ -503,7 +507,7 @@ class FindItemsEnv(GoalEnv):
                     return 10.0 + self._potential_min_actions_reward(instruction)
                 elif self._reward_type == FindItemsEnv.REWARD_TYPE_LAST_ITEM \
                         or self._reward_type == FindItemsEnv.REWARD_TYPE_EVERY_ITEM:
-                    return 1.0
+                    return 10.0
                 else:
                     raise NotImplementedError("Undefined reward type.")
 

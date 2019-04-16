@@ -133,10 +133,15 @@ def test_env_should_support_reward_as_minimum_number_of_actions_when_avoiding_no
     assert reward == -1
     _, reward, *_ = env.step(env.ACTION_MOVE_DOWN)
     assert reward == 1
+    assert env.goal_status() == GoalStatus.IN_PROGRESS
+
     _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
     assert reward == 11
+    assert env.goal_status() == GoalStatus.SUCCESS
+
     _, reward, *_ = env.step(env.ACTION_MOVE_RIGHT)
     assert reward == -10
+    assert env.goal_status() == GoalStatus.SUCCESS
 
 
 def test_env_should_support_reward_as_minimum_number_of_actions_when_not_avoiding_non_targets():
