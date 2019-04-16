@@ -27,7 +27,6 @@ from envs.goal.env                                 import GoalStatus
 from instructions								   import get_instructions
 from instructions               				   import get_instructions_tokenizer
 from utils.training                                import fix_random_seeds
-from utils.training                                import create_experiment_folder
 from typing                                        import List, Tuple
 from typing                                        import Optional, Dict
 from tensorboardX                                  import SummaryWriter
@@ -92,14 +91,14 @@ def train(
 	input_size:          int,
 
 	max_episode_len:     int,
-	max_episodes:        int,
+	max_iterations:      int,
 
 	learning_rate:       float,
 	gamma:               float,
 
 	eps_start:           float,
 	eps_end:             float,
-	eps_episodes:        int,
+	eps_iterations:      int,
 
 	batch_size:          int,
 
@@ -138,14 +137,14 @@ def train(
 	cur_eps = eps_start
 
 	# Testing vars
-	total_successes = []
-	total_lengths   = []
+	test_activated      = False
+	switch_activated    = False
 	best_model_traj_len = np.inf 
 
-	while total_episodes < max_episodes:
-		episode_lengths = []
-		episode_rewards = []
+	for iteration in range(max_iterations):
 		for layout in layouts:
+			episode_lengths = []
+			episode_rewards = []
 			for instruction in instructions:
 				episode_length  = 0
 				trajectory      = []
@@ -162,7 +161,6 @@ def train(
 
 				# Keep last frames
 				last_frames = deque([observation for _ in range(stack_frames)], stack_frames)
-
 				for step in range(max_episode_len):
 					episode_length += 1
 					total_steps    += 1
@@ -181,10 +179,6 @@ def train(
 
 					observation, reward, done,  _ = env.step(action)
 					done = done or episode_length >= max_episode_len
-
-					# Check if it was the last step and we could not successfuly eecute the instruction
-					if episode_length >= max_episode_len and done and reward < 10:
-						reward += -10
 
 					# Collect data
 					last_frames.append(observation)
@@ -233,72 +227,113 @@ def train(
 			logger.add_scalar("Rollout/Episode Length", np.mean(episode_lengths), total_steps)
 			logger.add_scalar("Rollout/Value loss", train_loss.cpu().item(), total_steps)
 
-			print("Seen episodes/frames: {}; {}".format(total_episodes, total_steps))
+			print("(Iteration {}/{}) Seen episodes/frames: {}; {}".format(iteration, max_iterations, total_episodes, total_steps))
 
 			# Schedule epsilon
-			cur_eps = np.clip(eps_start - (eps_start - eps_end) * (total_episodes / eps_episodes), eps_end, eps_start)
+			cur_eps = np.clip(eps_start - (eps_start - eps_end) * (iteration / eps_iterations), eps_end, eps_start)
 
 			# Switch models
-			if total_episodes % model_switch == 0:
+			if iteration % model_switch == 0:
 				model_sampler.load_state_dict(model_target.state_dict())
 				model_sampler.eval()
 
 			# Testing
-			if total_episodes % test_every == 0:
+			if iteration % test_every == 0:
+				total_successes = []
+				total_lengths   = []
+				total_rewards   = []
+
+				instruction_successes = defaultdict(list)
+				instruction_lengths   = defaultdict(list)
+				instruction_rewards   = defaultdict(list)
+
+				layout_successes      = defaultdict(list)
+				layout_lengths	 	  = defaultdict(list)
+				layout_rewards		  = defaultdict(list)
+
 				# Test every instruction
-				for instruction in instructions:
-					instruction_raw   = instruction[0]
-					instruction_items = instruction[1]
+				for layout_ind, layout in enumerate(layouts):
+					for instruction in instructions:
+						instruction_raw   = instruction[0]
+						instruction_items = instruction[1]
 
-					instruction_idx = tokenizer.text_to_ids(instruction[0])
-					instruction_idx = np.array(instruction_idx).reshape(1, -1)
-					
-					instruction_successes = []
-					instruction_lengths   = []
+						instruction_idx = tokenizer.text_to_ids(instruction[0])
+						instruction_idx = np.array(instruction_idx).reshape(1, -1)
 
-					env = env_definition.build_env(instruction_items)
-					for _ in range(test_repeat):
-						num_steps = 0
-						observation, reward, done, _ = env.reset()
-						last_frames = deque([observation] * stack_frames, stack_frames)
-						while num_steps < max_episode_len and env.goal_status() == GoalStatus.IN_PROGRESS and not done:
-							# Forward pass
-							with torch.no_grad():
-								model_input = prepare_model_input(list(last_frames), instruction_idx)
-								values      = model_sampler(model_input)
-							
-							# Epsilon-greedy
-							if np.random.rand() > cur_eps:
-								action = torch.argmax(values, dim=-1).cpu().item()
-							else:
-								action = env.action_space.sample()
+						env = env_definition.build_env(instruction_items)
+						env.fix_initial_positions(layout)
+						for _ in range(test_repeat):
+							num_steps = 0
+							observation, reward, done, _ = env.reset()
+							last_frames = deque([observation] * stack_frames, stack_frames)
+							rewards = []
+							while num_steps < max_episode_len and env.goal_status() == GoalStatus.IN_PROGRESS and not done:
+								# Forward pass
+								with torch.no_grad():
+									model_input = prepare_model_input(list(last_frames), instruction_idx)
+									values      = model_sampler(model_input)
+								
+								# Epsilon-greedy
+								if np.random.rand() > cur_eps:
+									action = torch.argmax(values, dim=-1).cpu().item()
+								else:
+									action = env.action_space.sample()
 
-							observation, reward, done,  _ = env.step(action)
-							done = done or episode_length >= max_episode_len
+								observation, reward, done,  _ = env.step(action)
+								done = done or num_steps >= max_episode_len
+								rewards.append(reward)
 
-							num_steps += 1
-							last_frames.append(observation)
+								num_steps += 1
+								last_frames.append(observation)
 
-						if env.goal_status() == GoalStatus.SUCCESS:
-							instruction_successes.append(1)
-							total_successes.append(1)
-						elif env.goal_status() == GoalStatus.FAILURE or env.goal_status() == GoalStatus.IN_PROGRESS:
-							instruction_successes.append(0)
-							total_successes.append(0)
-							num_steps = max_episode_len
+							success = 0
+							if env.goal_status() == GoalStatus.SUCCESS:
+								success = 1
+							elif env.goal_status() == GoalStatus.FAILURE or env.goal_status() == GoalStatus.IN_PROGRESS:
+								success = 0
+								num_steps = max_episode_len
 
-						instruction_lengths.append(num_steps)
-						total_lengths.append(num_steps)
+							discounted_reward = 0.0
+							for reward in reversed(rewards):
+								discounted_reward = reward + discounted_reward * gamma
 
-					# Compute means
-					mean_traj_len = np.mean(instruction_lengths)
-					mean_suc_rate = np.mean(instruction_successes)
+							# Save for statistics
+							layout_successes[layout_ind].append(success)
+							layout_lengths[layout_ind].append(num_steps)
+							layout_rewards[layout_ind].append(discounted_reward)
 
-					logger.add_scalar("TestTrajectoryLenMean/{}".format(instruction_raw), mean_traj_len, total_episodes)
-					logger.add_scalar("TestSuccessRateMean/{}".format(instruction_raw), mean_suc_rate, total_episodes)
+							total_rewards.append(discounted_reward)
+							total_lengths.append(num_steps)
+							total_successes.append(success)
 
+							instruction_successes[instruction_raw].append(success)
+							instruction_rewards[instruction_raw].append(discounted_reward)
+							instruction_lengths[instruction_raw].append(num_steps)
+
+				# Log collected test data for instructions
+				for instruction in instruction_successes:
+					mean_traj_len = np.mean(instruction_lengths[instruction])
+					mean_suc_rate = np.mean(instruction_successes[instruction])
+					mean_disc_rew = np.mean(instruction_rewards[instruction])
+
+					logger.add_scalar("TestTrajectoryLenMean/{}".format(instruction), mean_traj_len, total_episodes)
+					logger.add_scalar("TestSuccessRateMean/{}".format(instruction), mean_suc_rate, total_episodes)
+					logger.add_scalar("TestDiscountedReward/{}".format(instruction), mean_disc_rew, total_episodes)
+
+				# Log collected test data for layouts
+				for layout_ind, layout in enumerate(layouts):
+					mean_traj_len = np.mean(layout_lengths[layout_ind])
+					mean_suc_rate = np.mean(layout_successes[layout_ind])
+					mean_disc_rew = np.mean(layout_rewards[layout_ind])
+
+					logger.add_scalar("TestTrajectoryLenMean/Layout-{}".format(layout_ind), mean_traj_len, total_episodes)
+					logger.add_scalar("TestSuccessRateMean/Layout-{}".format(layout_ind), mean_suc_rate, total_episodes)
+					logger.add_scalar("TestDiscountedReward/Layout-{}".format(layout_ind), mean_disc_rew, total_episodes)
+				
+				# Log collected test data for totals
 				logger.add_scalar("TestTrajectoryLenMean", np.mean(total_lengths), total_episodes)
 				logger.add_scalar("TestSuccessRateMean", np.mean(total_successes), total_episodes)
+				logger.add_scalar("TestDiscountedReward", np.mean(total_rewards), total_episodes)
 
 				if np.mean(total_lengths) < best_model_traj_len:
 					torch.save(model_sampler.state_dict(), os.path.join(logdir, "best.model"))
@@ -335,14 +370,14 @@ args = (
 	tokenizer.get_vocabulary_size(),
 
 	train_parameters["max_episode_len"],
-	train_parameters["max_episodes"],
+	train_parameters["max_iterations"],
 
 	train_parameters["learning_rate"],
 	train_parameters["gamma"],
 
 	train_parameters["eps_start"],
 	train_parameters["eps_end"],
-	train_parameters["eps_episodes"],
+	train_parameters["eps_iterations"],
 
 	train_parameters["batch_size"],
 

@@ -3,6 +3,7 @@ Taken from here: https://github.com/rlcode/per/blob/master/
 """
 
 import random
+import warnings
 import numpy as np
 
 from experiments.dueling_dqn_ga_per.per.sumtree import SumTree
@@ -38,15 +39,26 @@ class PrioritizedProportionalReplay:
 
         self.beta = np.min([1., self.beta + self.beta_increment_per_sampling])
 
+        failed_segments = []
         for i in range(n):
             a = segment * i
             b = segment * (i + 1)
 
             s = random.uniform(a, b)
             (idx, p, data) = self.tree.get(s)
-            priorities.append(p)
-            batch.append(data)
-            idxs.append(idx)
+
+            if data == 0:
+                failed_segments.append(i)
+            else:
+                priorities.append(p)
+                batch.append(data)
+                idxs.append(idx)
+        
+        # This is a erroneuous behavior of SumTree
+        # Sometimes it can give you 0, which you don't want
+        # https://github.com/rlcode/per/issues/4#issuecomment-465829531
+        if len(failed_segments) > 0:
+            warnings.warn("SumTreen failed {} times.".format(len(failed_segments)))
 
         # Imortance Sampling weights for bias-correction
         #sampling_probabilities = priorities / self.tree.total()

@@ -31,8 +31,8 @@ env_definition = InstructionEnvironmentDefinition(
 # Experimental layouts description
 layouts_parameters = {
     "seed":      0,
-    "num_train": 10,
-    "num_test":  10
+    "num_train": 1,
+    "num_test":  1
 }
 
 # Experimental instructions description
@@ -40,26 +40,26 @@ instructions_parameters = {
     "seed":                0,
     "level":               1,
     "max_train_subgoals":  3,
-    "unseen_proportion":   0.1
+    "unseen_proportion":   0.7
 }
 
 # Agent's training parameters
 train_parameters = {
-    "max_episodes":        60000*2,
+    "max_iterations":      8000,
     "max_episode_len":     30,
 
     "learning_rate":       0.001,
     "gamma":               1.0,
 
-    "stack_frames":        2,
+    "stack_frames":        4,
 
     "eps_start":           0.95,
     "eps_end":             0.01,
-    "eps_episodes":        60000*2,
+    "eps_iterations":      8000,
 
     "replay_size":         1000000, # in frames
     "batch_size":          512,
-    "model_switch":        570, # in episodes
+    "model_switch":        5, # in iterations
 
     "padding_len":         24,
     "seed":                0
@@ -67,7 +67,7 @@ train_parameters = {
 
 # Agent's on-training testing parameters
 test_parameters = {
-    "test_every":  570,
+    "test_every":  50,
     "test_repeat": 2
 }
 
