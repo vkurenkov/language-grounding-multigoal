@@ -40,22 +40,24 @@ instructions_parameters = {
     "seed":                0,
     "level":               1,
     "max_train_subgoals":  3,
-    "unseen_proportion":   0.7
+    "unseen_proportion":   0.1,
+    "conjunctions":        "only_comma" # [all, only_comma]
 }
 
 # Agent's training parameters
 train_parameters = {
-    "max_iterations":      8000,
+    "max_iterations":      4000,
     "max_episode_len":     30,
 
     "learning_rate":       0.001,
     "gamma":               1.0,
+    "bootstrap_steps":     1,
 
     "stack_frames":        4,
 
     "eps_start":           0.95,
     "eps_end":             0.01,
-    "eps_iterations":      8000,
+    "eps_iterations":      4000,
 
     "replay_size":         1000000, # in frames
     "batch_size":          512,
@@ -68,14 +70,15 @@ train_parameters = {
 # Agent's on-training testing parameters
 test_parameters = {
     "test_every":  50,
-    "test_repeat": 2
+    "test_repeat": 1
 }
 
 # Experimental logging path setup
-def get_experiment_folder():
+def get_experiment_folder(erase_folder=None):
     return create_experiment_folder(
         os.path.join(os.path.dirname(__file__), "logs"),
         "instructions_{}".format(unroll_parameters_in_str(instructions_parameters)),
         env_definition.name(),
         "layouts_{}".format(unroll_parameters_in_str(layouts_parameters)),
-        unroll_parameters_in_str(train_parameters))
+        unroll_parameters_in_str(train_parameters),
+        erase_folder)

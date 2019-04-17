@@ -38,7 +38,8 @@ train_instructions, _, _ = get_instructions(
 							instructions_parameters["level"], 
 							instructions_parameters["max_train_subgoals"], 
 							instructions_parameters["unseen_proportion"],
-							instructions_parameters["seed"])
+							instructions_parameters["seed"],
+                            instructions_parameters["conjunctions"])
 tokenizer         		 = get_instructions_tokenizer(
 							train_instructions,
 							train_parameters["padding_len"])

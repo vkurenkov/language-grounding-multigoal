@@ -4,6 +4,7 @@ This file contains evaluation protocol for the agent.
 
 import os
 import torch
+import json
 import numpy as np
 import torch.nn.functional as F
 
@@ -111,7 +112,8 @@ def benchmark_all():
                                                                                 instructions_parameters["level"], 
                                                                                 instructions_parameters["max_train_subgoals"], 
                                                                                 instructions_parameters["unseen_proportion"],
-                                                                                instructions_parameters["seed"])
+                                                                                instructions_parameters["seed"],
+                                                                                instructions_parameters["conjunctions"])
     tokenizer         		 = get_instructions_tokenizer(
                                 train_instructions,
                                 train_parameters["padding_len"])
@@ -149,4 +151,7 @@ def benchmark_all():
                         stack_frames, tokenizer, env_definition, 
                         train_parameters["max_episode_len"], train_parameters["gamma"])
 
+    with open(os.path.join(experiment_folder, "benchmarks.json"), mode="w") as f:
+        json.dump(result, f)
+        
     return result

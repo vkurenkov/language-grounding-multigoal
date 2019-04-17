@@ -32,18 +32,6 @@ from typing                                        import Optional, Dict
 from tensorboardX                                  import SummaryWriter
 from collections                                   import defaultdict, deque
 
-# Experimental environment and layouts
-from experiments.dueling_dqn_ga_per.parameters import env_definition
-from experiments.dueling_dqn_ga_per.parameters import layouts_parameters
-
-# Experimental instructions
-from experiments.dueling_dqn_ga_per.parameters import instructions_parameters
-
-# Agent's training and testing parameters
-from experiments.dueling_dqn_ga_per.parameters import train_parameters
-from experiments.dueling_dqn_ga_per.parameters import test_parameters
-from experiments.dueling_dqn_ga_per.parameters import get_experiment_folder
-
 # Computational model
 from experiments.dueling_dqn_ga_per.model 	   import Model
 from experiments.dueling_dqn_ga_per.model      import prepare_model_input
@@ -95,6 +83,7 @@ def train(
 
 	learning_rate:       float,
 	gamma:               float,
+	bootstrap_steps:     int,
 
 	eps_start:           float,
 	eps_end:             float,
@@ -182,8 +171,8 @@ def train(
 
 					# Collect data
 					last_frames.append(observation)
-					action_value = values[0, action].cpu().item() # Can be used for td-error further
-					trajectory.append(((prev_observation, instruction_idx), action, reward, action_value))
+					action_values = values[0, :].cpu() # Can be used for td-error further
+					trajectory.append(((prev_observation, instruction_idx), action, reward, action_values))
 
 					if done:
 						break
@@ -192,15 +181,35 @@ def train(
 
 				# Calculate reward and move online trajectoy to eperience replay
 				discounted_reward_episode = 0.0
-				for epoch in reversed(trajectory):
+				for t, epoch in enumerate(trajectory):
 					epoch_reward = epoch[2]
 					epoch_obs    = epoch[0]
 					epoch_action = epoch[1]
-					epoch_value  = epoch[3]
+					epoch_values = epoch[3]
+					epoch_value  = epoch_values[epoch_action]
 
-					discounted_reward_episode = discounted_reward_episode * gamma + epoch_reward
-					td_error                  = abs(epoch_value - discounted_reward_episode)
-					replay.append(td_error, (epoch_obs, epoch_action, discounted_reward_episode))
+					# For logging
+					discounted_reward_episode = epoch_reward + gamma * discounted_reward_episode
+
+					# Bootstraping
+					for bootstrap_step in range(1, bootstrap_steps + 1):
+						# Break at the last epoch in trajectory
+						bootstrap_ind = t + bootstrap_step
+						if bootstrap_ind == len(trajectory):
+							break
+
+						# If it's the last bootstrap step - use q-values (1=td(0), 2=td(1), and etc.)
+						bootstrap_epoch = trajectory[bootstrap_ind]
+						if bootstrap_step == bootstrap_steps:
+							bootstrap_value = max(bootstrap_epoch[3])
+						else:
+							bootstrap_value = bootstrap_epoch[2]
+
+						bootstrap_value *= np.power(gamma, bootstrap_step)
+						epoch_reward    += bootstrap_value
+						
+					td_error = abs(epoch_value - epoch_reward)
+					replay.append(td_error, (epoch_obs, epoch_action, epoch_reward))
 				
 				# Save stats for current iteration
 				episode_rewards.append(discounted_reward_episode)
@@ -273,11 +282,8 @@ def train(
 									model_input = prepare_model_input(list(last_frames), instruction_idx)
 									values      = model_sampler(model_input)
 								
-								# Epsilon-greedy
-								if np.random.rand() > cur_eps:
-									action = torch.argmax(values, dim=-1).cpu().item()
-								else:
-									action = env.action_space.sample()
+								# Test our greedy policy
+								action = torch.argmax(values, dim=-1).cpu().item()
 
 								observation, reward, done,  _ = env.step(action)
 								done = done or num_steps >= max_episode_len
@@ -339,54 +345,68 @@ def train(
 					torch.save(model_sampler.state_dict(), os.path.join(logdir, "best.model"))
 					best_model_traj_len = np.mean(total_lengths)
 
+def start_training(erase_folder=None):
+	# Experimental instructions
+	from experiments.dueling_dqn_ga_per.parameters import instructions_parameters
 
-# Experimental folder
-experiment_folder        = get_experiment_folder()
+	# Agent's training and testing parameters
+	from experiments.dueling_dqn_ga_per.parameters import train_parameters
+	from experiments.dueling_dqn_ga_per.parameters import test_parameters
+	from experiments.dueling_dqn_ga_per.parameters import get_experiment_folder
 
-# Training instructions
-train_instructions, _, _ = get_instructions(
-							instructions_parameters["level"], 
-							instructions_parameters["max_train_subgoals"], 
-							instructions_parameters["unseen_proportion"],
-							instructions_parameters["seed"])
-tokenizer         		 = get_instructions_tokenizer(
-							train_instructions,
-							train_parameters["padding_len"])
+	# Experimental environment and layouts
+	from experiments.dueling_dqn_ga_per.parameters import env_definition
+	from experiments.dueling_dqn_ga_per.parameters import layouts_parameters
 
-# Training layouts
-layouts                  = env_definition.build_env().generate_layouts(
-							layouts_parameters["num_train"] + layouts_parameters["num_test"],
-							layouts_parameters["seed"])
-train_layouts			 = layouts[:layouts_parameters["num_train"]]
+	# Experimental folder
+	experiment_folder        = get_experiment_folder(erase_folder)
 
-args = (
-	env_definition,
-	train_layouts,
-	train_instructions,
-	tokenizer,
+	# Training instructions
+	train_instructions, _, _ = get_instructions(
+								instructions_parameters["level"], 
+								instructions_parameters["max_train_subgoals"], 
+								instructions_parameters["unseen_proportion"],
+								instructions_parameters["seed"],
+								instructions_parameters["conjunctions"])
+	tokenizer         		 = get_instructions_tokenizer(
+								train_instructions,
+								train_parameters["padding_len"])
 
-	experiment_folder,
-	train_parameters["seed"],
-	tokenizer.get_vocabulary_size(),
+	# Training layouts
+	layouts                  = env_definition.build_env().generate_layouts(
+								layouts_parameters["num_train"] + layouts_parameters["num_test"],
+								layouts_parameters["seed"])
+	train_layouts			 = layouts[:layouts_parameters["num_train"]]
 
-	train_parameters["max_episode_len"],
-	train_parameters["max_iterations"],
+	args = (
+		env_definition,
+		train_layouts,
+		train_instructions,
+		tokenizer,
 
-	train_parameters["learning_rate"],
-	train_parameters["gamma"],
+		experiment_folder,
+		train_parameters["seed"],
+		tokenizer.get_vocabulary_size(),
 
-	train_parameters["eps_start"],
-	train_parameters["eps_end"],
-	train_parameters["eps_iterations"],
+		train_parameters["max_episode_len"],
+		train_parameters["max_iterations"],
 
-	train_parameters["batch_size"],
+		train_parameters["learning_rate"],
+		train_parameters["gamma"],
+		train_parameters["bootstrap_steps"],
 
-	train_parameters["replay_size"],
-	train_parameters["model_switch"],
+		train_parameters["eps_start"],
+		train_parameters["eps_end"],
+		train_parameters["eps_iterations"],
 
-	test_parameters["test_every"],
-	test_parameters["test_repeat"],
+		train_parameters["batch_size"],
 
-	train_parameters["stack_frames"]
-)
-train(*args)
+		train_parameters["replay_size"],
+		train_parameters["model_switch"],
+
+		test_parameters["test_every"],
+		test_parameters["test_repeat"],
+
+		train_parameters["stack_frames"]
+	)
+	train(*args)
