@@ -19,9 +19,6 @@ from experiments.dueling_dqn_ga_per.model 	   import Model
 from experiments.dueling_dqn_ga_per.model      import prepare_model_input
 from experiments.dueling_dqn_ga_per.parameters import device
 
-# Prioritized eperience replay
-from experiments.dueling_dqn_ga_per.per        import PrioritizedProportionalReplay
-
 
 def benchmark_one(name, instructions, layouts, model, stack_frames, tokenizer, env_definition, max_episode_len, gamma):
     total_successes = []
@@ -42,6 +39,13 @@ def benchmark_one(name, instructions, layouts, model, stack_frames, tokenizer, e
             env = env_definition.build_env(instruction_items)
             env.fix_initial_positions(layout)
             observation, reward, done, _ = env.reset()
+            
+            # Get shortest path
+            start_pos         = env._agent_pos
+            shortest_distance = 0
+            for item in instruction_items:
+                shortest_distance += len(env._shortest_paths.get_path(start_pos, item))
+                start_pos          = env._items_pos[item]
 
             # Keep last frames
             last_frames = deque([observation for _ in range(stack_frames)], stack_frames)
@@ -82,7 +86,7 @@ def benchmark_one(name, instructions, layouts, model, stack_frames, tokenizer, e
                 discounted_reward = reward + discounted_reward * gamma
             total_rewards.append(discounted_reward)
 
-            result[instruction_raw].append({"reward": discounted_reward, "success": success, "steps": num_steps})
+            result[instruction_raw].append({"reward": discounted_reward, "success": success, "steps": num_steps, "optimal": shortest_distance})
 
     print("{} (success rate): {}%".format(name, np.mean(total_successes)))
     print("{} (trajectory len): {}".format(name, np.mean(total_lengths)))

@@ -12,7 +12,7 @@ import torch
 from envs.definitions           import InstructionEnvironmentDefinition
 from envs.gridworld_simple.env  import FindItemsEnvObsOnlyGrid
 from envs.gridworld_simple.env  import FindItemsEnv
-from utils.training             import create_experiment_folder
+from utils                      import training
 from utils.training             import unroll_parameters_in_str
 from functools                  import partial
 
@@ -40,7 +40,7 @@ instructions_parameters = {
     "seed":                0,
     "level":               1,
     "max_train_subgoals":  3,
-    "unseen_proportion":   0.5,
+    "unseen_proportion":   0.9,
     "conjunctions":        "only_comma" # [all, only_comma]
 }
 
@@ -74,8 +74,17 @@ test_parameters = {
 }
 
 # Experimental logging path setup
+def create_experiment_folder(erase_folder=None):
+    return training.create_experiment_folder(
+        os.path.join(os.path.dirname(__file__), "logs"),
+        "instructions_{}".format(unroll_parameters_in_str(instructions_parameters)),
+        env_definition.name(),
+        "layouts_{}".format(unroll_parameters_in_str(layouts_parameters)),
+        unroll_parameters_in_str(train_parameters),
+        erase_folder)
+
 def get_experiment_folder():
-    return create_experiment_folder(
+    return training.get_experiment_folder(
         os.path.join(os.path.dirname(__file__), "logs"),
         "instructions_{}".format(unroll_parameters_in_str(instructions_parameters)),
         env_definition.name(),

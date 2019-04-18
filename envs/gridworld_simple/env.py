@@ -682,7 +682,7 @@ class FindItemsVisualizator:
                     else:
                         color = FindItemsVisualizator.COLORS[item]
                     itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color=color)
-                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item), weight="bold")
+                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item), weight="bold", color="white")
                     a.add_artist(itm)
                     a.add_artist(txt)
 

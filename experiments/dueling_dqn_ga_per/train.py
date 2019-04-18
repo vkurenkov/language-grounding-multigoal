@@ -352,14 +352,14 @@ def start_training(erase_folder=None):
 	# Agent's training and testing parameters
 	from experiments.dueling_dqn_ga_per.parameters import train_parameters
 	from experiments.dueling_dqn_ga_per.parameters import test_parameters
-	from experiments.dueling_dqn_ga_per.parameters import get_experiment_folder
+	from experiments.dueling_dqn_ga_per.parameters import create_experiment_folder
 
 	# Experimental environment and layouts
 	from experiments.dueling_dqn_ga_per.parameters import env_definition
 	from experiments.dueling_dqn_ga_per.parameters import layouts_parameters
 
 	# Experimental folder
-	experiment_folder        = get_experiment_folder(erase_folder)
+	experiment_folder        = create_experiment_folder(erase_folder)
 
 	# Training instructions
 	train_instructions, _, _ = get_instructions(

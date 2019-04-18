@@ -32,18 +32,6 @@ from typing                                        import Optional, Dict
 from tensorboardX                                  import SummaryWriter
 from collections                                   import defaultdict, deque
 
-# Experimental environment and layouts
-from experiments.dueling_dqn_ga.parameters import env_definition
-from experiments.dueling_dqn_ga.parameters import layouts_parameters
-
-# Experimental instructions
-from experiments.dueling_dqn_ga.parameters import instructions_parameters
-
-# Agent's training and testing parameters
-from experiments.dueling_dqn_ga.parameters import train_parameters
-from experiments.dueling_dqn_ga.parameters import test_parameters
-from experiments.dueling_dqn_ga.parameters import get_experiment_folder
-
 # Computational model
 from experiments.dueling_dqn_ga.model 	   import Model
 from experiments.dueling_dqn_ga.model      import prepare_model_input
@@ -351,56 +339,68 @@ def train(
 					torch.save(model_sampler.state_dict(), os.path.join(logdir, "best.model"))
 					best_model_traj_len = np.mean(total_lengths)
 
+def start_training(erase_folder=None):
+	# Experimental instructions
+	from experiments.dueling_dqn_ga.parameters import instructions_parameters
 
-# Experimental folder
-experiment_folder        = get_experiment_folder()
+	# Agent's training and testing parameters
+	from experiments.dueling_dqn_ga.parameters import train_parameters
+	from experiments.dueling_dqn_ga.parameters import test_parameters
+	from experiments.dueling_dqn_ga.parameters import create_experiment_folder
 
-# Training instructions
-train_instructions, _, _ = get_instructions(
-							instructions_parameters["level"], 
-							instructions_parameters["max_train_subgoals"], 
-							instructions_parameters["unseen_proportion"],
-							instructions_parameters["seed"],
-							instructions_parameters["conjunctions"])
-tokenizer         		 = get_instructions_tokenizer(
-							train_instructions,
-							train_parameters["padding_len"])
+	# Experimental environment and layouts
+	from experiments.dueling_dqn_ga.parameters import env_definition
+	from experiments.dueling_dqn_ga.parameters import layouts_parameters
 
-# Training layouts
-layouts                  = env_definition.build_env().generate_layouts(
-							layouts_parameters["num_train"] + layouts_parameters["num_test"],
-							layouts_parameters["seed"])
-train_layouts			 = layouts[:layouts_parameters["num_train"]]
+	# Experimental folder
+	experiment_folder        = create_experiment_folder(erase_folder)
 
-args = (
-	env_definition,
-	train_layouts,
-	train_instructions,
-	tokenizer,
+	# Training instructions
+	train_instructions, _, _ = get_instructions(
+								instructions_parameters["level"], 
+								instructions_parameters["max_train_subgoals"], 
+								instructions_parameters["unseen_proportion"],
+								instructions_parameters["seed"],
+								instructions_parameters["conjunctions"])
+	tokenizer         		 = get_instructions_tokenizer(
+								train_instructions,
+								train_parameters["padding_len"])
 
-	experiment_folder,
-	train_parameters["seed"],
-	tokenizer.get_vocabulary_size(),
+	# Training layouts
+	layouts                  = env_definition.build_env().generate_layouts(
+								layouts_parameters["num_train"] + layouts_parameters["num_test"],
+								layouts_parameters["seed"])
+	train_layouts			 = layouts[:layouts_parameters["num_train"]]
 
-	train_parameters["max_episode_len"],
-	train_parameters["max_iterations"],
+	args = (
+		env_definition,
+		train_layouts,
+		train_instructions,
+		tokenizer,
 
-	train_parameters["learning_rate"],
-	train_parameters["gamma"],
-	train_parameters["bootstrap_steps"],
+		experiment_folder,
+		train_parameters["seed"],
+		tokenizer.get_vocabulary_size(),
 
-	train_parameters["eps_start"],
-	train_parameters["eps_end"],
-	train_parameters["eps_iterations"],
+		train_parameters["max_episode_len"],
+		train_parameters["max_iterations"],
 
-	train_parameters["batch_size"],
+		train_parameters["learning_rate"],
+		train_parameters["gamma"],
+		train_parameters["bootstrap_steps"],
 
-	train_parameters["replay_size"],
-	train_parameters["model_switch"],
+		train_parameters["eps_start"],
+		train_parameters["eps_end"],
+		train_parameters["eps_iterations"],
 
-	test_parameters["test_every"],
-	test_parameters["test_repeat"],
+		train_parameters["batch_size"],
 
-	train_parameters["stack_frames"]
-)
-train(*args)
+		train_parameters["replay_size"],
+		train_parameters["model_switch"],
+
+		test_parameters["test_every"],
+		test_parameters["test_repeat"],
+
+		train_parameters["stack_frames"]
+	)
+	train(*args)
