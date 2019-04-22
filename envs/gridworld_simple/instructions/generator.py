@@ -17,12 +17,23 @@ states = {
     "but before": " but before go to the {}"
 }
 transitions = {
-    "start": ["and then", "after that", "but first", "comma", "but before"],
-    "and then": ["after that", "but first", "but before"],
-    "after that": ["after that", "and then", "but first", "but before"],
-    "but first": [],
-    "comma": ["after that", "and then", "but first", "comma", "but before"],
-    "but before": ["after that", "and then", "but first"]
+    #"start": ["and then", "after that", "but first", "comma", "but before"], # All instructions
+    #"start": ["comma", "but first"],                                         # Level2 - Only comma
+    #"start": ["comma", "but before"],                                        # Level3 - Only comma
+    "start": ["comma", "but before", "but first"],                            # Level4 - Only comma
+
+    #"and then": ["after that", "but first", "but before"],                   # All instructions
+    # "after that": ["after that", "and then", "but first", "but before"],    # All instructions
+    "but first": [],                                                          # All instructions
+
+    #"comma": ["after that", "and then", "but first", "comma", "but before"], # All instructions
+    #"comma": ["comma", "but first"],                                         # Level2 - Only comma
+    #"comma": ["comma", "but before"],                                        # Level3 - Only comma
+    "comma": ["comma", "but before", "but first"],                            # Level4 - Only comma
+
+    #"but before": ["after that", "and then", "but first"]                    # All instructions
+    #"but before": []                                                         # Level3 - Only comma
+    "but before": ["but first"]                                               # Level4 - Only comma
 }
 states_order = {
     "start": lambda t : 0,
@@ -116,15 +127,15 @@ def extract_level1_instructions(instructions):
 
 if __name__ == "__main__":
     instructions         = generate_compound_instructions(name_mapping, max_instruction_length=6)
-    instructions_level1  = extract_level1_instructions(instructions)
+    #instructions_level1  = extract_level1_instructions(instructions)
     instructions_dataset = {
         "conjunctions": [conjunction_from_state(state) for state in states.values()],
         "name_ids": name_mapping,
     }
 
-    with open("instructions.json", mode="w", encoding="utf-8") as f:
+    # with open("instructions.json", mode="w", encoding="utf-8") as f:
+    #     instructions_dataset["instructions"] = instructions
+    #     json.dump(instructions_dataset, f, indent=4, separators=(",", ":"))
+    with open("instructions-level4.json", mode="w", encoding="utf-8") as f:
         instructions_dataset["instructions"] = instructions
-        json.dump(instructions_dataset, f, indent=4, separators=(",", ":"))
-    with open("instructions-level1.json", mode="w", encoding="utf-8") as f:
-        instructions_dataset["instructions"] = instructions_level1
         json.dump(instructions_dataset, f, indent=4, separators=(",", ":"))

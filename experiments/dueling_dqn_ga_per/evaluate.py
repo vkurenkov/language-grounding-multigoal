@@ -50,6 +50,9 @@ def benchmark_one(name, instructions, layouts, model, stack_frames, tokenizer, e
             # Keep last frames
             last_frames = deque([observation for _ in range(stack_frames)], stack_frames)
 
+            # Assume that agent needs at worse 20 steps to arrive at any object to any object
+            max_episode_len = len(instruction_items) * 20
+
             num_steps = 0
             rewards   = []
             while num_steps < max_episode_len and env.goal_status() == GoalStatus.IN_PROGRESS and not done:
@@ -137,13 +140,13 @@ def benchmark_all():
 
     eval_pairs = {
         "Instructions seen, layouts seen": (train_instructions, train_layouts),
-        "Instructions seen, layouts unseen": (train_instructions, test_layouts),
+        #"Instructions seen, layouts unseen": (train_instructions, test_layouts),
 
         "Instructions unseen, layouts seen": (unseen_instructions, train_layouts),
-        "Instructions unseen, layouts unseen": (unseen_instructions, test_layouts),
+        #"Instructions unseen, layouts unseen": (unseen_instructions, test_layouts),
 
-        "Instructions high, layouts seen": (higher_subgoals_instructions, train_layouts),
-        "Instructions high, layouts unseen": (higher_subgoals_instructions, test_layouts)
+        "Instructions high, layouts seen": (higher_subgoals_instructions, train_layouts)
+        #"Instructions high, layouts unseen": (higher_subgoals_instructions, test_layouts)
     }
     result     = {}
 
