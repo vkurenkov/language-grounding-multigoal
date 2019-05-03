@@ -34,3 +34,9 @@ Every experiment is saved into its own folder, which is defined in terms of the 
 ------
 
 If you want to run many experiments with different parameters, consider the file ```runner_hypothesis_synonyms.py```. It shows how you could do it (but it's a bit messy).
+
+------
+It's recommended to use Linux-based system, as the most Windows systems are not friendly with long paths. 
+
+------
+Just execute ```build_run.sh```, and it will build a container for running training or benchmarking jobs (visualiztion should be run locally).
