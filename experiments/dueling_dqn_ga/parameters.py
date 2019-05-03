@@ -18,7 +18,7 @@ from functools                  import partial
 
 
 # Computing device
-device = torch.device("cuda")
+device = torch.device("cpu")
 
 # Target environment
 env_definition = InstructionEnvironmentDefinition(
