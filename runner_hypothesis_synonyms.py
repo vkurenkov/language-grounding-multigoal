@@ -180,7 +180,7 @@ PARAMETERS       = {
     "conjunctions":       ["only_comma"],
     "seeds":              [0],
     "methods":            [dueling_dqn_ga, dueling_dqn_cat, dueling_dqn_ga_per, dueling_dqn_cat_per],
-    "levels":             [3, 4]
+    "levels":             [1, 2, 3, 4]
 }
 
 # Generate all setups from given parameters
