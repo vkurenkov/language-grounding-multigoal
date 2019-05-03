@@ -15,7 +15,7 @@ In order to train, evaluate, or visualise any of the agents, you need to import 
 
 - To visualise the Dueling DQN + Gated-Attention agent
 ```
-from experiments.dueling_dqn_ga import visualise
+from experiments.dueling_dqn_ga import visualize
 ```
 - To start training of the Dueling DQN + Concatenation agent
 ```
