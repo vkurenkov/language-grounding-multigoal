@@ -24,7 +24,7 @@ train.start_training()
 ```
 - To benchmark the Dueling DQN + Concatenation agent
 ```
-from experiments.dueling_dqn_cat import evaluat
+from experiments.dueling_dqn_cat import evaluate
 evaluate.benchmark_all()
 ```
 ------
