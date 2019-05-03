@@ -681,8 +681,14 @@ class FindItemsVisualizator:
                         color = cmap(norm(item))
                     else:
                         color = FindItemsVisualizator.COLORS[item]
-                    itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color=color)
-                    txt = plt.Text(x + 0.3, y + 0.3, text=str(item), weight="bold", color="white")
+                    itm = plt.Rectangle((x + 0.25, y + 0.25), 0.5, 0.5, color="black", linewidth=1, fill=False)
+                    if item == 0:
+                        item = "R"
+                    elif item == 1:
+                        item = "B"
+                    elif item == 2:
+                        item = "G"
+                    txt = plt.Text(x + 0.4, y + 0.4, text=str(item), weight="bold")
                     a.add_artist(itm)
                     a.add_artist(txt)
 
