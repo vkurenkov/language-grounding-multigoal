@@ -1,5 +1,6 @@
-# Task-Oriented Language Grounding for Compound Linguistic Instructions
+# Task-Oriented Language Grounding for Language Input with Multiple Sub-Goals of Non-Linear Order
 
+This repository contains an accompanying source code and experiments' results for [this paper](https://arxiv.org/not-yet-uploaded). 
 
 ## How the project is organized
 
