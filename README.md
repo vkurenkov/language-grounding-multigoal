@@ -1,6 +1,6 @@
 # Task-Oriented Language Grounding for Language Input with Multiple Sub-Goals of Non-Linear Order
 
-This repository contains an accompanying source code and experiments' results for [this paper](https://arxiv.org/not-yet-uploaded). 
+This repository contains an accompanying source code and experiments' results for [this paper](https://arxiv.org/abs/1910.12354). 
 
 ## How the project is organized
 
