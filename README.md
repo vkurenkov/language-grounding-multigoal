@@ -2,9 +2,11 @@
 
 This repository contains an accompanying source code and experiments' results for [this paper](https://arxiv.org/abs/1910.12354).
 
-<img src="pics/comma.gif" height="35%" width="35%">
-<img src="pics/but_first.gif" height="35%" width="35%">
-<img src="pics/but_before.gif" height="35%" width="35%">
+<p align="center">
+  <img src="pics/comma.gif" height="35%" width="35%">
+  <img src="pics/but_first.gif" height="35%" width="35%">
+  <img src="pics/but_before.gif" height="35%" width="35%">
+</p>
 
 ## How the project is organized
 
